@@ -1,11 +1,12 @@
 import type { FastifyInstance } from "fastify";
+import { VesselClassification, StabilityLevel } from "@bantay-pilipinas/shared";
 import type { ApiResponse, TrackedVessel, WPSIncident, WPSTensionScore } from "@bantay-pilipinas/shared";
 
 const MOCK_VESSELS: TrackedVessel[] = [
   {
     mmsi: 412000001,
     name: "CCG 5901",
-    classification: "ccg" as never,
+    classification: VesselClassification.CCG,
     flagState: "CN",
     lat: 15.12,
     lon: 117.75,
@@ -25,7 +26,7 @@ const MOCK_TENSION: WPSTensionScore = {
     militaryActivity: 45,
     newsVelocity: 35,
   },
-  level: "elevated" as never,
+  level: StabilityLevel.Elevated,
   trend: "stable",
   computedAt: new Date().toISOString(),
 };

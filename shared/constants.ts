@@ -81,3 +81,11 @@ export const REGION_BASELINES: Record<RegionId, number> = {
   [RegionId.CAR]: 25,
   [RegionId.EVBicol]: 20,
 };
+
+export function getStabilityLevel(score: number): StabilityLevel {
+  if (score < 20) return StabilityLevel.Low;
+  if (score < 35) return StabilityLevel.Guarded;
+  if (score < 50) return StabilityLevel.Elevated;
+  if (score < 70) return StabilityLevel.High;
+  return StabilityLevel.Severe;
+}

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { NewsCategory } from "@bantay-pilipinas/shared";
 import type { NewsArticle, ApiResponse } from "@bantay-pilipinas/shared";
 
 const MOCK_NEWS: NewsArticle[] = [
@@ -9,7 +10,7 @@ const MOCK_NEWS: NewsArticle[] = [
     url: "https://example.com/news/1",
     source: "Philippine News Agency",
     sourceTier: 1,
-    category: "wps-maritime" as never,
+    category: NewsCategory.WPSMaritime,
     publishedAt: new Date().toISOString(),
     fetchedAt: new Date().toISOString(),
     entities: ["DFA", "WPS"],
@@ -22,7 +23,7 @@ const MOCK_NEWS: NewsArticle[] = [
     url: "https://example.com/news/2",
     source: "BusinessWorld",
     sourceTier: 2,
-    category: "economy" as never,
+    category: NewsCategory.Economy,
     publishedAt: new Date().toISOString(),
     fetchedAt: new Date().toISOString(),
     entities: ["PSE"],

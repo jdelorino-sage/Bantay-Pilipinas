@@ -1,13 +1,5 @@
-import { REGION_BASELINES, RegionId, StabilityLevel } from "@bantay-pilipinas/shared";
+import { REGION_BASELINES, RegionId, getStabilityLevel } from "@bantay-pilipinas/shared";
 import type { RegionalStabilityScore } from "@bantay-pilipinas/shared";
-
-function getLevel(score: number): StabilityLevel {
-  if (score < 20) return StabilityLevel.Low;
-  if (score < 35) return StabilityLevel.Guarded;
-  if (score < 50) return StabilityLevel.Elevated;
-  if (score < 70) return StabilityLevel.High;
-  return StabilityLevel.Severe;
-}
 
 export function computeRegionalStability(
   regionId: RegionId,
@@ -23,7 +15,7 @@ export function computeRegionalStability(
     score,
     components: { baselineRisk: baseline, unrest, security, information },
     boosts: {},
-    level: getLevel(score),
+    level: getStabilityLevel(score),
     trend: "stable",
     computedAt: new Date().toISOString(),
   };
