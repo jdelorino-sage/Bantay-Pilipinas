@@ -16,8 +16,12 @@ import type {
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> {
+  const headers: Record<string, string> = {};
+  if (init?.body) {
+    headers["Content-Type"] = "application/json";
+  }
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...init,
   });
   if (!res.ok) {

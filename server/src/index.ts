@@ -19,8 +19,13 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 async function main(): Promise<void> {
   const app = Fastify({ logger: true });
 
+  const origins = [FRONTEND_URL];
+  if (process.env.NODE_ENV !== "production") {
+    origins.push("http://localhost:5173");
+  }
+
   await app.register(cors, {
-    origin: [FRONTEND_URL, "http://localhost:5173"],
+    origin: origins,
   });
 
   await app.register(rateLimit, {
@@ -44,7 +49,22 @@ async function main(): Promise<void> {
   startScheduler();
 
   await app.listen({ port: PORT, host: "0.0.0.0" });
-  console.log(`Bantay Pilipinas API listening on port ${PORT}`);
+  app.log.info(`Bantay Pilipinas API listening on port ${PORT}`);
+
+  const shutdown = async (signal: string): Promise<void> => {
+    app.log.info(`Received ${signal}, shutting down...`);
+    await app.close();
+    try {
+      const { getPool } = await import("./db/client.js");
+      await getPool().end();
+    } catch {
+      // Pool may not be initialized
+    }
+    process.exit(0);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 main().catch((err) => {

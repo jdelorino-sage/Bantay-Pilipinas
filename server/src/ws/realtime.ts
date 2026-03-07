@@ -7,6 +7,10 @@ export function registerRealtimeWS(app: FastifyInstance): void {
   app.get("/ws/ais", { websocket: true }, (socket) => {
     clients.add(socket);
     socket.on("close", () => clients.delete(socket));
+    socket.on("error", (err) => {
+      app.log.error({ err }, "WebSocket client error");
+      clients.delete(socket);
+    });
   });
 }
 
