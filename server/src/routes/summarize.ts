@@ -2,7 +2,23 @@ import type { FastifyInstance } from "fastify";
 import type { ApiResponse, AISummary } from "@bantay-pilipinas/shared";
 
 export function registerSummarizeRoutes(app: FastifyInstance): void {
-  app.post("/api/summarize", async (request) => {
+  app.post("/api/summarize", {
+    schema: {
+      body: {
+        type: "object",
+        required: ["headlineIds"],
+        properties: {
+          headlineIds: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+            maxItems: 50,
+          },
+        },
+        additionalProperties: false,
+      },
+    },
+  }, async (request) => {
     const { headlineIds } = request.body as { headlineIds: number[] };
 
     // TODO: Implement Groq -> OpenRouter -> Ollama fallback chain

@@ -32,7 +32,17 @@ const MOCK_NEWS: NewsArticle[] = [
 ];
 
 export function registerNewsRoutes(app: FastifyInstance): void {
-  app.get("/api/news", async (request) => {
+  app.get("/api/news", {
+    schema: {
+      querystring: {
+        type: "object",
+        properties: {
+          category: { type: "string" },
+        },
+        additionalProperties: false,
+      },
+    },
+  }, async (request) => {
     const { category } = request.query as { category?: string };
     let articles = MOCK_NEWS;
     if (category) {
