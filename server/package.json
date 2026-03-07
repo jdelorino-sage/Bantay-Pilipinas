@@ -21,7 +21,8 @@
     "node-cron": "^3.0.0",
     "rss-parser": "^3.13.0",
     "cheerio": "^1.0.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "@bantay-pilipinas/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
