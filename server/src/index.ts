@@ -19,7 +19,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 async function main(): Promise<void> {
   const app = Fastify({ logger: true });
 
-  const origins = [FRONTEND_URL];
+  const origins = [FRONTEND_URL, "https://bantay-pilipinas.netlify.app"];
   if (process.env.NODE_ENV !== "production") {
     origins.push("http://localhost:5173");
   }
