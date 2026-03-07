@@ -1,5 +1,6 @@
 import type { ApiClient } from "../services/api-client";
 import type { EconomicDataPoint } from "@bantay-pilipinas/shared";
+import { escapeHtml } from "../utils/sanitize";
 
 export class MarketPanel {
   private api: ApiClient;
@@ -38,7 +39,7 @@ export class MarketPanel {
         .map(
           (d: EconomicDataPoint) => `
           <div class="market-item">
-            <span class="market-label">${d.indicator}</span>
+            <span class="market-label">${escapeHtml(d.indicator)}</span>
             <span class="market-value">${d.currency === "PHP" ? "₱" : "$"}${d.value.toLocaleString()}</span>
           </div>
         `

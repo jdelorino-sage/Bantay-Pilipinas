@@ -12,7 +12,7 @@ export function getPool(): pg.Pool {
     }
     pool = new Pool({
       connectionString,
-      ssl: { rejectUnauthorized: false },
+      ssl: true,
       max: 10,
       idleTimeoutMillis: 30_000,
     });
