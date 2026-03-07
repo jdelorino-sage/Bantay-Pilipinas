@@ -4,6 +4,10 @@ const { Pool } = pg;
 
 let pool: pg.Pool | null = null;
 
+export function hasDatabaseUrl(): boolean {
+  return !!process.env.DATABASE_URL;
+}
+
 export function getPool(): pg.Pool {
   if (!pool) {
     const connectionString = process.env.DATABASE_URL;
@@ -25,6 +29,7 @@ export async function query(text: string, params?: unknown[]): Promise<pg.QueryR
 }
 
 export async function testConnection(): Promise<boolean> {
+  if (!hasDatabaseUrl()) return false;
   try {
     const result = await query("SELECT 1");
     return result.rowCount === 1;
