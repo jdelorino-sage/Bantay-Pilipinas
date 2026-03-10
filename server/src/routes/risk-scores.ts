@@ -66,7 +66,7 @@ async function getLatestWPSTension(): Promise<WPSTensionScore> {
     }
   }
 
-  const tension = computeWPSTension(0, 0, 0, 0);
+  const tension = await computeWPSTension(0, 0, 0, 0);
   cache.set("risk:wps", tension, SCORE_TTL);
   return tension;
 }

@@ -115,28 +115,7 @@ export async function computeAllRegions(): Promise<RegionalStabilityScore[]> {
 }
 
 export async function runScoreComputation(): Promise<void> {
-  const [ncrUnrest, barmmConflict, wpsVessels, carConflict, disasterNews] = await Promise.all([
-    getConflictScore("Metro Manila"),
-    getConflictScore("Mindanao"),
-    getVesselIntrusionScore(),
-    getConflictScore("Cordillera"),
-    getNewsVelocityForCategory("disaster"),
-  ]);
-
-  const [ncrNews, wpsNews, barmmNews, militaryActivity] = await Promise.all([
-    getNewsVelocityForCategory("national-politics"),
-    getNewsVelocityForCategory("wps-maritime"),
-    getNewsVelocityForCategory("defense"),
-    getNewsVelocityForCategory("defense"),
-  ]);
-
-  const regions = await Promise.all([
-    computeRegionalStability(RegionId.NCR, ncrUnrest, 20, ncrNews),
-    computeRegionalStability(RegionId.BARMM, barmmConflict, Math.min(barmmConflict + 10, 100), barmmNews),
-    computeRegionalStability(RegionId.WPS, 0, wpsVessels, wpsNews),
-    computeRegionalStability(RegionId.CAR, carConflict, Math.min(carConflict + 5, 100), 20),
-    computeRegionalStability(RegionId.EVBicol, 15, 20, disasterNews),
-  ]);
+  const regions = await computeAllRegions();
 
   if (hasDatabaseUrl()) {
     for (const r of regions) {
@@ -148,7 +127,12 @@ export async function runScoreComputation(): Promise<void> {
       ).catch((err: unknown) => console.error("[stability] DB insert failed:", (err as Error).message));
     }
 
-    const wpsTension = computeWPSTension(wpsVessels, wpsNews, militaryActivity, wpsNews);
+    const wpsRegion = regions.find((r) => r.regionId === RegionId.WPS);
+    const wpsVessels = wpsRegion?.components.security ?? 0;
+    const wpsNews = wpsRegion?.components.information ?? 0;
+    const militaryActivity = await getNewsVelocityForCategory("defense");
+
+    const wpsTension = await computeWPSTension(wpsVessels, wpsNews, militaryActivity, wpsNews);
     await query(
       `INSERT INTO ${TABLES.WPS_TENSION_SCORES}
        (score, components, level, trend, computed_at)

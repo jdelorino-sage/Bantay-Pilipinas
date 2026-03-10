@@ -95,7 +95,7 @@ async function getTension(): Promise<WPSTensionScore> {
     }
   }
 
-  const tension = computeWPSTension(0, 0, 0, 0);
+  const tension = await computeWPSTension(0, 0, 0, 0);
   cache.set("wps:tension", tension, TENSION_TTL);
   return tension;
 }

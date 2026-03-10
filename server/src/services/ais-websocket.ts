@@ -40,6 +40,44 @@ interface AISStreamMessage {
 
 type VesselHandler = (vessel: AISMessage) => void;
 
+function classifyVessel(mmsi: number, name?: string | null, speed?: number): VesselClassification {
+  const mid = Math.floor(mmsi / 1_000_000);
+  const upperName = (name || "").toUpperCase();
+
+  if (mid === 412 || mid === 413 || mid === 414) {
+    if (upperName.includes("HAIJING") || upperName.includes("CCG") || upperName.includes("COAST GUARD")) {
+      return VesselClassification.CCG;
+    }
+    if (upperName.includes("PLAN") || upperName.includes("NAVY") || /^\d{3,4}$/.test(upperName.trim())) {
+      return VesselClassification.PLAN;
+    }
+    if (upperName.includes("PAFMM") || upperName.includes("MILITIA") || upperName.includes("YU")) {
+      return VesselClassification.PAFMM;
+    }
+    return VesselClassification.Fishing;
+  }
+
+  if (mid === 548) {
+    if (upperName.includes("BRP") || upperName.includes("NAVY") || upperName.includes("AFP")) {
+      return VesselClassification.PHNavy;
+    }
+    if (upperName.includes("PCG") || upperName.includes("COAST GUARD")) {
+      return VesselClassification.PHCoastGuard;
+    }
+    return VesselClassification.Fishing;
+  }
+
+  if (mid === 338 || mid === 366 || mid === 367 || mid === 368 || mid === 369) {
+    if (upperName.includes("USS") || upperName.includes("USNS") || upperName.includes("NAVY")) {
+      return VesselClassification.USNavy;
+    }
+    return VesselClassification.Commercial;
+  }
+
+  if ((speed ?? 0) > 5) return VesselClassification.Commercial;
+  return VesselClassification.Unknown;
+}
+
 function isInEEZ(lat: number, lon: number): boolean {
   return (
     lat >= PH_EEZ_BOUNDS.south &&
@@ -171,11 +209,12 @@ export class AISStreamClient {
 
     const inEez = isInEEZ(lat, lon);
     const nearFeature = findNearFeature(lat, lon);
+    const classification = classifyVessel(mmsi, name, vessel.speed);
 
     broadcastVesselUpdate({
       mmsi,
       name,
-      classification: VesselClassification.Unknown,
+      classification,
       lat,
       lon,
       heading: vessel.heading,
@@ -190,7 +229,7 @@ export class AISStreamClient {
         `INSERT INTO ${TABLES.VESSEL_TRACKS}
          (mmsi, name, classification, flag_state, lat, lon, heading, speed, in_eez, near_feature, recorded_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
-        [mmsi, name, VesselClassification.Unknown, null, lat, lon, vessel.heading || null, vessel.speed || null, inEez, nearFeature]
+        [mmsi, name, classification, null, lat, lon, vessel.heading || null, vessel.speed || null, inEez, nearFeature]
       ).catch((err: unknown) => console.error("[ais] DB insert failed:", (err as Error).message));
     }
   }

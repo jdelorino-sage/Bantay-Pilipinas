@@ -14,6 +14,19 @@ interface GDELTArticle {
   sourcecountry: string;
 }
 
+interface StoredGDELTArticle {
+  title: string;
+  url: string;
+  source: string;
+  category: string;
+  publishedAt: string;
+  fetchedAt: string;
+}
+
+const MEMORY_MAX = 500;
+const MEMORY_PRUNE = 100;
+const memoryStore = new Map<string, StoredGDELTArticle>();
+
 export async function fetchGDELT(): Promise<void> {
   if (!breaker.canExecute()) return;
 
@@ -42,8 +55,11 @@ export async function fetchGDELT(): Promise<void> {
     for (const article of json.articles) {
       if (!article.url || !article.title) continue;
 
+      const urlHash = hashUrl(article.url);
+      const category = categorizeGDELT(article.title);
+      const publishedAt = article.seendate ? parseGDELTDate(article.seendate) : new Date().toISOString();
+
       if (hasDatabaseUrl()) {
-        const urlHash = hashUrl(article.url);
         await query(
           `INSERT INTO ${TABLES.NEWS_ARTICLES}
            (url_hash, title, url, source, source_tier, category, published_at, entities, sentiment)
@@ -55,12 +71,30 @@ export async function fetchGDELT(): Promise<void> {
             article.url,
             article.domain || "GDELT",
             4,
-            categorizeGDELT(article.title),
-            article.seendate ? parseGDELTDate(article.seendate) : new Date().toISOString(),
+            category,
+            publishedAt,
             JSON.stringify([]),
             "neutral",
           ]
         ).catch((err: unknown) => console.error("[gdelt] DB insert failed:", (err as Error).message));
+      } else {
+        if (!memoryStore.has(urlHash)) {
+          if (memoryStore.size >= MEMORY_MAX) {
+            const entries = [...memoryStore.entries()]
+              .sort((a, b) => a[1].fetchedAt.localeCompare(b[1].fetchedAt));
+            for (let i = 0; i < MEMORY_PRUNE && i < entries.length; i++) {
+              memoryStore.delete(entries[i][0]);
+            }
+          }
+          memoryStore.set(urlHash, {
+            title: article.title,
+            url: article.url,
+            source: article.domain || "GDELT",
+            category,
+            publishedAt,
+            fetchedAt: new Date().toISOString(),
+          });
+        }
       }
       stored++;
     }
@@ -88,6 +122,19 @@ function parseGDELTDate(dateStr: string): string {
   } catch {
     return new Date().toISOString();
   }
+}
+
+export function getGDELTArticles(category?: string, limit = 50): StoredGDELTArticle[] {
+  let articles = Array.from(memoryStore.values());
+  if (category) {
+    articles = articles.filter((a) => a.category === category);
+  }
+  articles.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  return articles.slice(0, limit);
+}
+
+export function getGDELTArticleCount(): number {
+  return memoryStore.size;
 }
 
 function categorizeGDELT(title: string): string {
