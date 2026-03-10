@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "${RAILWAY_BACKEND_URL}/api/:splat"
+  to = "https://${RAILWAY_BACKEND_URL}/api/:splat"
   status = 200
   force = true
 
