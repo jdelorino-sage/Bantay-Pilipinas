@@ -20,6 +20,7 @@ COPY --from=builder /app/shared/package.json ./shared/package.json
 COPY --from=builder /app/frontend/package.json ./frontend/package.json
 
 COPY --from=builder /app/server/dist ./server/dist
+COPY --from=builder /app/server/src/db/migrations ./server/dist/db/migrations
 COPY --from=builder /app/shared/dist ./shared/dist
 
 RUN npm ci --workspace=shared --workspace=server --omit=dev

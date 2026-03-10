@@ -1,11 +1,18 @@
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { getPool } from "./client.js";
+import { getPool, hasDatabaseUrl } from "./client.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function migrate(): Promise<void> {
+const MIGRATIONS = ["001_initial.sql"];
+
+export async function runMigrations(): Promise<void> {
+  if (!hasDatabaseUrl()) {
+    console.log("[migrate] No DATABASE_URL set, skipping migrations");
+    return;
+  }
+
   const pool = getPool();
 
   await pool.query(`
@@ -19,9 +26,7 @@ async function migrate(): Promise<void> {
   const applied = await pool.query("SELECT name FROM _migrations ORDER BY id");
   const appliedNames = new Set(applied.rows.map((r: { name: string }) => r.name));
 
-  const migrations = ["001_initial.sql"];
-
-  for (const migration of migrations) {
+  for (const migration of MIGRATIONS) {
     if (appliedNames.has(migration)) {
       console.log(`[migrate] Skipping ${migration} (already applied)`);
       continue;
@@ -33,11 +38,18 @@ async function migrate(): Promise<void> {
     console.log(`[migrate] Applied ${migration}`);
   }
 
-  await pool.end();
-  console.log("[migrate] Done");
+  console.log("[migrate] Migrations complete");
 }
 
-migrate().catch((err) => {
-  console.error("[migrate] Failed:", err);
-  process.exit(1);
-});
+// CLI entrypoint: run migrations and close pool
+if (process.argv[1] && process.argv[1].includes("migrate")) {
+  runMigrations()
+    .then(async () => {
+      await getPool().end();
+      console.log("[migrate] Done");
+    })
+    .catch((err) => {
+      console.error("[migrate] Failed:", err);
+      process.exit(1);
+    });
+}

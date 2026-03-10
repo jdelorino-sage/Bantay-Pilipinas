@@ -107,6 +107,13 @@ export class ApiClient {
 
   async getHealth(): Promise<HealthResponse> {
     const res = await fetch(`${API_BASE}/api/health`);
+    if (!res.ok) {
+      throw new Error(`Health check failed: ${res.status}`);
+    }
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error(`Health check returned non-JSON: ${contentType}`);
+    }
     return res.json();
   }
 }

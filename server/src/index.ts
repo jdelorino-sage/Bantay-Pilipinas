@@ -13,12 +13,20 @@ import { registerHealthRoutes } from "./routes/health.js";
 import { startScheduler } from "./scrapers/scheduler.js";
 import { registerRealtimeWS } from "./ws/realtime.js";
 import { AISStreamClient } from "./services/ais-websocket.js";
+import { runMigrations } from "./db/migrate.js";
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 async function main(): Promise<void> {
   const app = Fastify({ logger: true });
+
+  // Auto-run database migrations on startup
+  try {
+    await runMigrations();
+  } catch (err) {
+    app.log.warn(`Database migration failed (server will continue with in-memory fallback): ${err}`);
+  }
 
   const origins = [FRONTEND_URL, "https://bantay-pilipinas.netlify.app"];
   if (process.env.NODE_ENV !== "production") {
