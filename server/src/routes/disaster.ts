@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import type { ApiResponse, Typhoon, Earthquake, VolcanoStatus } from "@bantay-pilipinas/shared";
+import { getStoredEarthquakes, getStoredVolcanoes } from "../scrapers/phivolcs-scraper.js";
+import { getStoredTyphoons } from "../scrapers/pagasa-scraper.js";
 
-const MOCK_EARTHQUAKES: Earthquake[] = [
+const FALLBACK_EARTHQUAKES: Earthquake[] = [
   {
     id: 1,
     magnitude: 4.2,
@@ -16,7 +18,7 @@ const MOCK_EARTHQUAKES: Earthquake[] = [
   },
 ];
 
-const MOCK_VOLCANOES: VolcanoStatus[] = [
+const FALLBACK_VOLCANOES: VolcanoStatus[] = [
   {
     id: "taal",
     name: "Taal",
@@ -41,13 +43,43 @@ const MOCK_VOLCANOES: VolcanoStatus[] = [
 
 export function registerDisasterRoutes(app: FastifyInstance): void {
   app.get("/api/disaster", async () => {
+    let freshness = "live";
+
+    let earthquakes: Earthquake[];
+    try {
+      const scraped = await getStoredEarthquakes(20);
+      earthquakes = scraped.length > 0
+        ? (scraped as unknown as Earthquake[])
+        : FALLBACK_EARTHQUAKES;
+      if (scraped.length === 0) freshness = "mock";
+    } catch {
+      earthquakes = FALLBACK_EARTHQUAKES;
+      freshness = "mock";
+    }
+
+    let volcanoes: VolcanoStatus[];
+    try {
+      const scraped = await getStoredVolcanoes();
+      volcanoes = scraped.length > 0
+        ? (scraped as unknown as VolcanoStatus[])
+        : FALLBACK_VOLCANOES;
+    } catch {
+      volcanoes = FALLBACK_VOLCANOES;
+      freshness = "mock";
+    }
+
+    let typhoons: Typhoon[];
+    try {
+      const scraped = await getStoredTyphoons();
+      typhoons = scraped as unknown as Typhoon[];
+    } catch {
+      typhoons = [];
+      freshness = "mock";
+    }
+
     const response: ApiResponse<{ typhoons: Typhoon[]; earthquakes: Earthquake[]; volcanoes: VolcanoStatus[] }> = {
-      data: {
-        typhoons: [],
-        earthquakes: MOCK_EARTHQUAKES,
-        volcanoes: MOCK_VOLCANOES,
-      },
-      meta: { freshness: "mock", timestamp: new Date().toISOString() },
+      data: { typhoons, earthquakes, volcanoes },
+      meta: { freshness, timestamp: new Date().toISOString() },
     };
     return response;
   });

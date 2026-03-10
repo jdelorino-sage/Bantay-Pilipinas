@@ -1,8 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import { NewsCategory } from "@bantay-pilipinas/shared";
 import type { NewsArticle, ApiResponse } from "@bantay-pilipinas/shared";
+import { getStoredArticles } from "../scrapers/rss-aggregator.js";
 
-const MOCK_NEWS: NewsArticle[] = [
+const FALLBACK_NEWS: NewsArticle[] = [
   {
     id: 1,
     urlHash: "abc123",
@@ -44,7 +45,21 @@ export function registerNewsRoutes(app: FastifyInstance): void {
     },
   }, async (request) => {
     const { category } = request.query as { category?: string };
-    let articles = MOCK_NEWS;
+
+    try {
+      const articles = await getStoredArticles(category, 50);
+      if (articles.length > 0) {
+        const response: ApiResponse<NewsArticle[]> = {
+          data: articles as unknown as NewsArticle[],
+          meta: { freshness: "live", timestamp: new Date().toISOString() },
+        };
+        return response;
+      }
+    } catch (err) {
+      console.warn("[news] Failed to get stored articles:", (err as Error).message);
+    }
+
+    let articles = FALLBACK_NEWS;
     if (category) {
       articles = articles.filter((a) => a.category === category);
     }
