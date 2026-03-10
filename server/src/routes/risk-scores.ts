@@ -1,76 +1,117 @@
 import type { FastifyInstance } from "fastify";
-import { RegionId, StabilityLevel } from "@bantay-pilipinas/shared";
 import type { ApiResponse, RegionalStabilityScore, WPSTensionScore } from "@bantay-pilipinas/shared";
+import { hasDatabaseUrl, query } from "../db/client.js";
+import { TABLES } from "../db/schema.js";
+import { computeAllRegions } from "../services/stability-scorer.js";
+import { computeWPSTension } from "../services/wps-tension-scorer.js";
+import { LRUCache } from "../services/cache.js";
 
-const MOCK_REGIONS: RegionalStabilityScore[] = [
-  {
-    regionId: RegionId.NCR,
-    score: 22.5,
-    components: { baselineRisk: 15, unrest: 25, security: 20, information: 30 },
-    boosts: {},
-    level: StabilityLevel.Guarded,
-    trend: "stable",
-    computedAt: new Date().toISOString(),
-  },
-  {
-    regionId: RegionId.BARMM,
-    score: 45.0,
-    components: { baselineRisk: 40, unrest: 50, security: 48, information: 40 },
-    boosts: {},
-    level: StabilityLevel.Elevated,
-    trend: "stable",
-    computedAt: new Date().toISOString(),
-  },
-  {
-    regionId: RegionId.WPS,
-    score: 42.5,
-    components: { baselineRisk: 35, unrest: 0, security: 55, information: 45 },
-    boosts: {},
-    level: StabilityLevel.Elevated,
-    trend: "rising",
-    computedAt: new Date().toISOString(),
-  },
-  {
-    regionId: RegionId.CAR,
-    score: 28.0,
-    components: { baselineRisk: 25, unrest: 30, security: 28, information: 30 },
-    boosts: {},
-    level: StabilityLevel.Guarded,
-    trend: "falling",
-    computedAt: new Date().toISOString(),
-  },
-  {
-    regionId: RegionId.EVBicol,
-    score: 25.0,
-    components: { baselineRisk: 20, unrest: 15, security: 22, information: 40 },
-    boosts: {},
-    level: StabilityLevel.Guarded,
-    trend: "stable",
-    computedAt: new Date().toISOString(),
-  },
-];
+const cache = new LRUCache<unknown>(20);
+const SCORE_TTL = 60_000;
 
-const MOCK_WPS_TENSION: WPSTensionScore = {
-  score: 42.5,
-  components: { vesselIntrusions: 55, diplomaticSignals: 30, militaryActivity: 45, newsVelocity: 35 },
-  level: StabilityLevel.Elevated,
-  trend: "stable",
-  computedAt: new Date().toISOString(),
-};
+async function getLatestRegionScores(): Promise<RegionalStabilityScore[]> {
+  const cached = cache.get("risk:regions") as RegionalStabilityScore[] | undefined;
+  if (cached) return cached;
+
+  if (hasDatabaseUrl()) {
+    try {
+      const result = await query(
+        `SELECT DISTINCT ON (region_id)
+                region_id AS "regionId", score, components, boosts, level, trend,
+                computed_at AS "computedAt"
+         FROM ${TABLES.STABILITY_SCORES}
+         ORDER BY region_id, computed_at DESC`
+      );
+      if (result.rows.length > 0) {
+        const scores = result.rows.map((r: Record<string, unknown>) => ({
+          ...r,
+          components: typeof r.components === "string" ? JSON.parse(r.components as string) : r.components,
+          boosts: typeof r.boosts === "string" ? JSON.parse(r.boosts as string) : (r.boosts || {}),
+        })) as RegionalStabilityScore[];
+        cache.set("risk:regions", scores, SCORE_TTL);
+        return scores;
+      }
+    } catch (err) {
+      console.error("[risk-scores] Failed to query stability scores:", (err as Error).message);
+    }
+  }
+
+  const scores = computeAllRegions();
+  cache.set("risk:regions", scores, SCORE_TTL);
+  return scores;
+}
+
+async function getLatestWPSTension(): Promise<WPSTensionScore> {
+  const cached = cache.get("risk:wps") as WPSTensionScore | undefined;
+  if (cached) return cached;
+
+  if (hasDatabaseUrl()) {
+    try {
+      const result = await query(
+        `SELECT score, components, level, trend, computed_at AS "computedAt"
+         FROM ${TABLES.WPS_TENSION_SCORES}
+         ORDER BY computed_at DESC LIMIT 1`
+      );
+      if (result.rows.length > 0) {
+        const row = result.rows[0];
+        const tension = {
+          ...row,
+          components: typeof row.components === "string" ? JSON.parse(row.components) : row.components,
+        } as WPSTensionScore;
+        cache.set("risk:wps", tension, SCORE_TTL);
+        return tension;
+      }
+    } catch (err) {
+      console.error("[risk-scores] Failed to query WPS tension:", (err as Error).message);
+    }
+  }
+
+  const tension = computeWPSTension(0, 0, 0, 0);
+  cache.set("risk:wps", tension, SCORE_TTL);
+  return tension;
+}
+
+async function getScoreHistory(): Promise<RegionalStabilityScore[]> {
+  if (hasDatabaseUrl()) {
+    try {
+      const result = await query(
+        `SELECT region_id AS "regionId", score, components, boosts, level, trend,
+                computed_at AS "computedAt"
+         FROM ${TABLES.STABILITY_SCORES}
+         WHERE computed_at > NOW() - INTERVAL '7 days'
+         ORDER BY computed_at DESC
+         LIMIT 500`
+      );
+      return result.rows.map((r: Record<string, unknown>) => ({
+        ...r,
+        components: typeof r.components === "string" ? JSON.parse(r.components as string) : r.components,
+        boosts: typeof r.boosts === "string" ? JSON.parse(r.boosts as string) : (r.boosts || {}),
+      })) as RegionalStabilityScore[];
+    } catch (err) {
+      console.error("[risk-scores] Failed to query history:", (err as Error).message);
+    }
+  }
+  return [];
+}
 
 export function registerRiskScoreRoutes(app: FastifyInstance): void {
   app.get("/api/risk-scores", async () => {
+    const [regions, wpsTension] = await Promise.all([
+      getLatestRegionScores(),
+      getLatestWPSTension(),
+    ]);
     const response: ApiResponse<{ regions: RegionalStabilityScore[]; wpsTension: WPSTensionScore }> = {
-      data: { regions: MOCK_REGIONS, wpsTension: MOCK_WPS_TENSION },
-      meta: { freshness: "mock", timestamp: new Date().toISOString() },
+      data: { regions, wpsTension },
+      meta: { freshness: "live", timestamp: new Date().toISOString() },
     };
     return response;
   });
 
   app.get("/api/risk-scores/history", async () => {
+    const history = await getScoreHistory();
     const response: ApiResponse<RegionalStabilityScore[]> = {
-      data: [],
-      meta: { freshness: "mock", timestamp: new Date().toISOString() },
+      data: history,
+      meta: { freshness: history.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
     };
     return response;
   });

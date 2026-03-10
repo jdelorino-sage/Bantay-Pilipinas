@@ -106,8 +106,8 @@ export class App {
       statusEl.textContent = "LIVE";
       statusEl.style.color = "";
     } catch {
-      statusEl.textContent = "DEMO";
-      statusEl.style.color = "var(--accent-yellow, #ffa726)";
+      statusEl.textContent = "OFFLINE";
+      statusEl.style.color = "var(--accent-red, #ef5350)";
     }
   }
 }

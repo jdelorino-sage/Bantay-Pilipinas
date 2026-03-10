@@ -1,9 +1,3 @@
-// Drizzle ORM schema definitions
-// These mirror the SQL migration in migrations/001_initial.sql
-
-// TODO: Define drizzle-orm table schemas when ORM integration is ready
-// For now, raw SQL queries via pg Pool are used
-
 export const TABLES = {
   NEWS_ARTICLES: "news_articles",
   VESSEL_TRACKS: "vessel_tracks",

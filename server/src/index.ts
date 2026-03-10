@@ -12,6 +12,7 @@ import { registerSummarizeRoutes } from "./routes/summarize.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { startScheduler } from "./scrapers/scheduler.js";
 import { registerRealtimeWS } from "./ws/realtime.js";
+import { AISStreamClient } from "./services/ais-websocket.js";
 
 const PORT = parseInt(process.env.PORT || "3001", 10);
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -46,6 +47,9 @@ async function main(): Promise<void> {
 
   registerRealtimeWS(app);
 
+  const aisClient = new AISStreamClient();
+  aisClient.connect();
+
   startScheduler();
 
   await app.listen({ port: PORT, host: "0.0.0.0" });
@@ -53,6 +57,7 @@ async function main(): Promise<void> {
 
   const shutdown = async (signal: string): Promise<void> => {
     app.log.info(`Received ${signal}, shutting down...`);
+    aisClient.disconnect();
     await app.close();
     try {
       const { getPool } = await import("./db/client.js");

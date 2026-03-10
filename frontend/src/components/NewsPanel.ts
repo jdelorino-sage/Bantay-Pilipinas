@@ -36,12 +36,8 @@ export class NewsPanel {
       const response = await this.api.getNews();
       const body = el.querySelector(".panel-body")!;
       const badge = el.querySelector(".panel-badge");
-      if (response.meta.freshness === "fallback" && badge) {
-        badge.textContent = "DEMO";
-        badge.classList.add("demo");
-      } else if (badge) {
-        badge.textContent = "LIVE";
-        badge.classList.remove("demo");
+      if (badge) {
+        badge.textContent = response.data.length > 0 ? "LIVE" : "EMPTY";
       }
       if (response.data.length === 0) {
         body.innerHTML = '<p class="panel-placeholder">No articles yet</p>';

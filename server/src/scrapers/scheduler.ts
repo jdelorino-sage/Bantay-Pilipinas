@@ -2,7 +2,11 @@ import cron from "node-cron";
 import { runAggregator } from "./rss-aggregator.js";
 import { scrapePHIVOLCS, scrapeVolcanoStatus } from "./phivolcs-scraper.js";
 import { scrapePAGASA } from "./pagasa-scraper.js";
+import { scrapeBSP } from "./bsp-scraper.js";
+import { fetchACLED } from "./acled-fetcher.js";
+import { fetchGDELT } from "./gdelt-fetcher.js";
 import { PH_FEEDS } from "../config/feeds.js";
+import { runScoreComputation } from "../services/stability-scorer.js";
 
 export interface ScraperStatus {
   status: "idle" | "running" | "ok" | "error";
@@ -17,6 +21,8 @@ const scraperStatuses: Record<string, ScraperStatus> = {
   phivolcs: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
   bsp: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
   acled: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
+  gdelt: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
+  scores: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
 };
 
 async function runWithStatus(name: string, fn: () => Promise<unknown>): Promise<void> {
@@ -60,19 +66,24 @@ export function startScheduler(): void {
     });
   });
 
-  // BSP exchange rates — every 30 minutes (stub, logs only)
+  // BSP exchange rates + PSE — every 30 minutes
   cron.schedule("*/30 * * * *", () => {
-    console.log("[scheduler] BSP scraper tick (not yet implemented)");
+    runWithStatus("bsp", () => scrapeBSP());
   });
 
-  // ACLED conflict events — every hour (stub, logs only)
+  // ACLED conflict events — every hour
   cron.schedule("0 * * * *", () => {
-    console.log("[scheduler] ACLED fetcher tick (not yet implemented)");
+    runWithStatus("acled", () => fetchACLED());
   });
 
-  // Score computation — every 10 minutes (stub, logs only)
+  // GDELT news events — every 15 minutes
+  cron.schedule("*/15 * * * *", () => {
+    runWithStatus("gdelt", () => fetchGDELT());
+  });
+
+  // Score computation (RSI + WPS Tension) — every 10 minutes
   cron.schedule("*/10 * * * *", () => {
-    console.log("[scheduler] Score computation tick (not yet implemented)");
+    runWithStatus("scores", () => runScoreComputation());
   });
 
   console.log("[scheduler] All cron jobs registered");
@@ -86,5 +97,8 @@ export function startScheduler(): void {
       await scrapeVolcanoStatus();
     });
     runWithStatus("pagasa", () => scrapePAGASA());
+    runWithStatus("bsp", () => scrapeBSP());
+    runWithStatus("gdelt", () => fetchGDELT());
+    runWithStatus("scores", () => runScoreComputation());
   }, 3_000);
 }
