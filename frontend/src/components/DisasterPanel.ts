@@ -78,6 +78,10 @@ export class DisasterPanel {
       }
     } catch (err) {
       console.warn("[disaster] Failed to load:", err);
+      const eqList = el.querySelector("#earthquake-list");
+      if (eqList) eqList.innerHTML = '<p class="panel-placeholder">Waiting for backend...</p>';
+      const volList = el.querySelector("#volcano-list");
+      if (volList) volList.innerHTML = '<p class="panel-placeholder">Waiting for backend...</p>';
     }
   }
 }

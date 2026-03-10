@@ -64,6 +64,10 @@ export class WPSPanel {
       }
     } catch (err) {
       console.warn("[wps] Failed to load:", err);
+      const scoreEl = el.querySelector("#wps-tension-value");
+      if (scoreEl) scoreEl.textContent = "--";
+      const vesselEl = el.querySelector("#wps-vessel-summary");
+      if (vesselEl) vesselEl.innerHTML = '<p class="panel-placeholder">Waiting for backend...</p>';
     }
   }
 }

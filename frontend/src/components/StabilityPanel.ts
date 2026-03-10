@@ -58,6 +58,8 @@ export class StabilityPanel {
       `;
     } catch (err) {
       console.warn("[stability] Failed to load:", err);
+      const body = el.querySelector("#stability-body");
+      if (body) body.innerHTML = '<p class="panel-placeholder">Waiting for backend...</p>';
     }
   }
 }

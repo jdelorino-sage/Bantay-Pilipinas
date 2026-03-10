@@ -89,10 +89,25 @@ export class App {
   }
 
   private startPolling(): void {
+    this.checkHealth();
     setInterval(() => {
       for (const panel of this.panelInstances) {
         panel.refresh();
       }
+      this.checkHealth();
     }, POLL_INTERVAL_MS);
+  }
+
+  private async checkHealth(): Promise<void> {
+    const statusEl = document.getElementById("connection-status");
+    if (!statusEl) return;
+    try {
+      await this.api.getHealth();
+      statusEl.textContent = "LIVE";
+      statusEl.style.color = "";
+    } catch {
+      statusEl.textContent = "DEMO";
+      statusEl.style.color = "var(--accent-yellow, #ffa726)";
+    }
   }
 }

@@ -198,7 +198,11 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<ApiRespon
     if (!res.ok) {
       throw new Error(`API ${res.status}: ${res.statusText}`);
     }
-    return res.json();
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error(`Expected JSON but got ${contentType}`);
+    }
+    return await res.json();
   } catch (err) {
     console.warn(`[api] ${path}:`, err);
     const basePath = path.split("?")[0];

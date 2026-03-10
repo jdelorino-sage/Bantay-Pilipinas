@@ -53,6 +53,8 @@ export class MarketPanel {
         .join("");
     } catch (err) {
       console.warn("[market] Failed to load:", err);
+      const container = el.querySelector("#market-indicators");
+      if (container) container.innerHTML = '<p class="panel-placeholder">Waiting for backend...</p>';
     }
   }
 }
