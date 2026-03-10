@@ -4,15 +4,19 @@ const { Pool } = pg;
 
 let pool: pg.Pool | null = null;
 
+function getDatabaseUrl(): string | undefined {
+  return process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL || process.env.NETLIFY_DATABASE_URL_UNPOOLED;
+}
+
 export function hasDatabaseUrl(): boolean {
-  return !!process.env.DATABASE_URL;
+  return !!getDatabaseUrl();
 }
 
 export function getPool(): pg.Pool {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = getDatabaseUrl();
     if (!connectionString) {
-      throw new Error("DATABASE_URL environment variable is required");
+      throw new Error("DATABASE_URL or NETLIFY_DATABASE_URL environment variable is required");
     }
     pool = new Pool({
       connectionString,
