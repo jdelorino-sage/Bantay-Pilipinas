@@ -159,6 +159,17 @@ export interface EconomicDataPoint {
   recordedAt: string;
 }
 
+export interface SocialFeedItem {
+  id: string;
+  platform: "youtube" | "twitter" | "reddit" | "tiktok" | "facebook";
+  title: string;
+  url: string;
+  author: string;
+  publishedAt: string | null;
+  thumbnailUrl: string | null;
+  videoId: string | null;
+}
+
 export interface FeedHealthStatus {
   feedUrl: string;
   feedName: string;

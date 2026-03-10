@@ -43,12 +43,18 @@ export const PH_FEEDS: FeedDefinition[] = [
   { id: "sunstar", name: "SunStar", url: "https://www.sunstar.com.ph/rssFeed/0", tier: SourceTier.SpecialistRegional, category: NewsCategory.Regional, language: "en" },
   { id: "manilatimes", name: "The Manila Times", url: "https://www.manilatimes.net/feed/", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
 
-  // Tier 3 — Social Media & Community (Reddit, YouTube)
+  // Tier 3 — Social Media & Community (Reddit, YouTube, TikTok RSS proxies)
   { id: "reddit-ph", name: "Reddit r/Philippines", url: "https://www.reddit.com/r/Philippines/.rss", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "reddit-ph-news", name: "Reddit r/PHNews", url: "https://www.reddit.com/r/phnews/.rss", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "reddit-pilipinas", name: "Reddit r/Pilipinas", url: "https://www.reddit.com/r/Pilipinas/.rss", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "yt-abscbn", name: "ABS-CBN YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCstEtN1GBximQ0ZMy2FE0dA", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "yt-gma", name: "GMA YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCVPbYEWwYOH5jm6Bvi0XkYg", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "yt-cnnph", name: "CNN PH YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCeEj9SKvxkOTkmGmFSMredQ", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-ptv", name: "PTV YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCm1oP_sg26QBKAC4UGFjMhA", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-rappler", name: "Rappler YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCiNfMdFmMnMHFGNRsaRwISA", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-inquirer", name: "Inquirer YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCkI4MSujJJGP-n108BgBKRQ", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-untv", name: "UNTV YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCeaB-mJyLjZGi85CIR6PFpg", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-onenews", name: "One News PH YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCm0nRQPKqYjE0kD2RAxsVwg", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
 
   // Tier 4 — Google News Aggregation (Philippines-focused)
   { id: "gnews-ph", name: "Google News PH", url: "https://news.google.com/rss/search?q=Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: SourceTier.AggregatorInternational, category: NewsCategory.NationalPolitics, language: "en" },

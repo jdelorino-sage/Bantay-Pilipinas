@@ -12,6 +12,7 @@ import type {
   RegionalStabilityScore,
   AISummary,
   HealthResponse,
+  SocialFeedItem,
 } from "@bantay-pilipinas/shared";
 
 function normalizeBase(raw: string): string {
@@ -121,6 +122,11 @@ export class ApiClient {
       method: "POST",
       body: JSON.stringify({ headlineIds }),
     });
+  }
+
+  async getSocialFeeds(platform?: string): Promise<ApiResponse<SocialFeedItem[]>> {
+    const params = platform ? `?platform=${encodeURIComponent(platform)}` : "";
+    return fetchJsonWithFallback(`/api/social-feeds${params}`, []);
   }
 
   async getHealth(): Promise<HealthResponse> {

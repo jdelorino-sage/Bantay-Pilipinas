@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { runAggregator } from "./rss-aggregator.js";
+import { runSocialAggregator } from "./social-feed-aggregator.js";
 import { scrapePHIVOLCS, scrapeVolcanoStatus } from "./phivolcs-scraper.js";
 import { scrapePAGASA, scrapeWeatherAdvisories } from "./pagasa-scraper.js";
 import { scrapeBSP } from "./bsp-scraper.js";
@@ -24,6 +25,7 @@ const scraperStatuses: Record<string, ScraperStatus> = {
   gdelt: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
   scores: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
   weather: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
+  social: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
 };
 
 async function runWithStatus(name: string, fn: () => Promise<unknown>): Promise<void> {
@@ -85,6 +87,11 @@ export function startScheduler(): void {
     runWithStatus("gdelt", () => fetchGDELT());
   });
 
+  // Social feeds (YouTube, Reddit) — every 5 minutes
+  cron.schedule("*/5 * * * *", () => {
+    runWithStatus("social", () => runSocialAggregator());
+  });
+
   // Score computation (RSI + WPS Tension) — every 10 minutes
   cron.schedule("*/10 * * * *", () => {
     runWithStatus("scores", () => runScoreComputation());
@@ -106,6 +113,7 @@ export function startScheduler(): void {
     });
     runWithStatus("bsp", () => scrapeBSP());
     runWithStatus("gdelt", () => fetchGDELT());
+    runWithStatus("social", () => runSocialAggregator());
     runWithStatus("scores", () => runScoreComputation());
   }, 3_000);
 }

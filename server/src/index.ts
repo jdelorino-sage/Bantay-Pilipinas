@@ -10,6 +10,7 @@ import { registerMilitaryRoutes } from "./routes/military.js";
 import { registerRiskScoreRoutes } from "./routes/risk-scores.js";
 import { registerSummarizeRoutes } from "./routes/summarize.js";
 import { registerHealthRoutes } from "./routes/health.js";
+import { registerSocialFeedRoutes } from "./routes/social-feeds.js";
 import { startScheduler } from "./scrapers/scheduler.js";
 import { registerRealtimeWS } from "./ws/realtime.js";
 import { AISStreamClient } from "./services/ais-websocket.js";
@@ -57,6 +58,7 @@ async function main(): Promise<void> {
   registerRiskScoreRoutes(app);
   registerSummarizeRoutes(app);
   registerHealthRoutes(app);
+  registerSocialFeedRoutes(app);
 
   registerRealtimeWS(app);
 

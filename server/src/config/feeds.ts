@@ -35,12 +35,18 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "sunstar", name: "SunStar", url: "https://www.sunstar.com.ph/rssFeed/0", tier: 3, category: "regional" },
   { id: "manilatimes", name: "The Manila Times", url: "https://www.manilatimes.net/feed/", tier: 3, category: "national-politics" },
 
-  // Tier 3 — Social Media & Community (Reddit, YouTube)
+  // Tier 3 — Social Media & Community (Reddit, YouTube, TikTok RSS proxies)
   { id: "reddit-ph", name: "Reddit r/Philippines", url: "https://www.reddit.com/r/Philippines/.rss", tier: 3, category: "national-politics" },
   { id: "reddit-ph-news", name: "Reddit r/PHNews", url: "https://www.reddit.com/r/phnews/.rss", tier: 3, category: "national-politics" },
+  { id: "reddit-pilipinas", name: "Reddit r/Pilipinas", url: "https://www.reddit.com/r/Pilipinas/.rss", tier: 3, category: "national-politics" },
   { id: "yt-abscbn", name: "ABS-CBN YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCstEtN1GBximQ0ZMy2FE0dA", tier: 3, category: "national-politics" },
   { id: "yt-gma", name: "GMA YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCVPbYEWwYOH5jm6Bvi0XkYg", tier: 3, category: "national-politics" },
   { id: "yt-ptv", name: "PTV YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCm1oP_sg26QBKAC4UGFjMhA", tier: 3, category: "national-politics" },
+  { id: "yt-rappler", name: "Rappler YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCiNfMdFmMnMHFGNRsaRwISA", tier: 3, category: "national-politics" },
+  { id: "yt-cnnph", name: "CNN PH YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCeEj9SKvxkOTkmGmFSMredQ", tier: 3, category: "national-politics" },
+  { id: "yt-inquirer", name: "Inquirer YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCkI4MSujJJGP-n108BgBKRQ", tier: 3, category: "national-politics" },
+  { id: "yt-untv", name: "UNTV YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCeaB-mJyLjZGi85CIR6PFpg", tier: 3, category: "national-politics" },
+  { id: "yt-onenews", name: "One News PH YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCm0nRQPKqYjE0kD2RAxsVwg", tier: 3, category: "national-politics" },
 
   // Tier 4 — Google News Aggregation (Philippines-focused)
   { id: "gnews-ph", name: "Google News PH", url: "https://news.google.com/rss/search?q=Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
