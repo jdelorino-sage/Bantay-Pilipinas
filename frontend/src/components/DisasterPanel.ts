@@ -1,6 +1,15 @@
 import type { ApiClient } from "../services/api-client";
-import type { Typhoon, Earthquake, VolcanoStatus } from "@bantay-pilipinas/shared";
+import type { Typhoon, Earthquake, VolcanoStatus, WeatherAdvisory } from "@bantay-pilipinas/shared";
 import { escapeHtml } from "../utils/sanitize";
+
+const ADVISORY_LABELS: Record<string, string> = {
+  lpa: "LPA",
+  monsoon: "Monsoon",
+  itcz: "ITCZ",
+  shearline: "Shearline",
+  ridge: "Ridge",
+  general: "Advisory",
+};
 
 export class DisasterPanel {
   private api: ApiClient;
@@ -18,6 +27,10 @@ export class DisasterPanel {
         <h2 class="panel-title">Disaster Monitor</h2>
       </div>
       <div class="panel-body">
+        <div class="disaster-section">
+          <h3>Weather Advisories</h3>
+          <div id="advisory-list"><p class="panel-placeholder">No active advisories</p></div>
+        </div>
         <div class="disaster-section">
           <h3>Active Typhoons</h3>
           <div id="typhoon-list"><p class="panel-placeholder">No active typhoons</p></div>
@@ -44,7 +57,23 @@ export class DisasterPanel {
   private async load(el: HTMLElement): Promise<void> {
     try {
       const response = await this.api.getDisaster();
-      const { typhoons, earthquakes, volcanoes } = response.data;
+      const { typhoons, earthquakes, volcanoes, weatherAdvisories } = response.data;
+
+      const advisoryList = el.querySelector("#advisory-list")!;
+      const activeAdvisories = (weatherAdvisories || []).filter((a: WeatherAdvisory) => a.isActive);
+      if (activeAdvisories.length > 0) {
+        advisoryList.innerHTML = activeAdvisories
+          .map((a: WeatherAdvisory) => {
+            const label = ADVISORY_LABELS[a.type] || a.type;
+            const areas = a.affectedAreas.length > 0
+              ? ` — ${a.affectedAreas.slice(0, 3).map(escapeHtml).join(", ")}`
+              : "";
+            return `<div class="disaster-item disaster-advisory"><strong>${escapeHtml(label)}</strong>${areas}<br><small>${escapeHtml(a.description.slice(0, 150))}</small></div>`;
+          })
+          .join("");
+      } else {
+        advisoryList.innerHTML = '<p class="panel-placeholder">No active advisories</p>';
+      }
 
       const typhoonList = el.querySelector("#typhoon-list")!;
       if (typhoons.length > 0) {

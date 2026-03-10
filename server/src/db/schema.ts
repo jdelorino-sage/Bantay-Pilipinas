@@ -11,4 +11,5 @@ export const TABLES = {
   FEED_STATUS: "feed_status",
   AI_SUMMARIES: "ai_summaries",
   CONFLICT_EVENTS: "conflict_events",
+  WEATHER_ADVISORIES: "weather_advisories",
 } as const;

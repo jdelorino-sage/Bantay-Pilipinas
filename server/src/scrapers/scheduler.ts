@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { runAggregator } from "./rss-aggregator.js";
 import { scrapePHIVOLCS, scrapeVolcanoStatus } from "./phivolcs-scraper.js";
-import { scrapePAGASA } from "./pagasa-scraper.js";
+import { scrapePAGASA, scrapeWeatherAdvisories } from "./pagasa-scraper.js";
 import { scrapeBSP } from "./bsp-scraper.js";
 import { fetchACLED } from "./acled-fetcher.js";
 import { fetchGDELT } from "./gdelt-fetcher.js";
@@ -23,6 +23,7 @@ const scraperStatuses: Record<string, ScraperStatus> = {
   acled: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
   gdelt: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
   scores: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
+  weather: { status: "idle", lastRun: null, lastError: null, runCount: 0 },
 };
 
 async function runWithStatus(name: string, fn: () => Promise<unknown>): Promise<void> {
@@ -53,9 +54,12 @@ export function startScheduler(): void {
     runWithStatus("rss", () => runAggregator(PH_FEEDS));
   });
 
-  // PAGASA typhoon bulletins — every 30 minutes
+  // PAGASA typhoon bulletins + weather advisories — every 30 minutes
   cron.schedule("*/30 * * * *", () => {
-    runWithStatus("pagasa", () => scrapePAGASA());
+    runWithStatus("pagasa", async () => {
+      await scrapePAGASA();
+      await scrapeWeatherAdvisories();
+    });
   });
 
   // PHIVOLCS earthquakes — every 5 minutes
@@ -96,7 +100,10 @@ export function startScheduler(): void {
       await scrapePHIVOLCS();
       await scrapeVolcanoStatus();
     });
-    runWithStatus("pagasa", () => scrapePAGASA());
+    runWithStatus("pagasa", async () => {
+      await scrapePAGASA();
+      await scrapeWeatherAdvisories();
+    });
     runWithStatus("bsp", () => scrapeBSP());
     runWithStatus("gdelt", () => fetchGDELT());
     runWithStatus("scores", () => runScoreComputation());

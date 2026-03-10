@@ -86,6 +86,18 @@ export interface ForecastPoint {
   windKph: number | null;
 }
 
+export interface WeatherAdvisory {
+  id: string;
+  type: "lpa" | "monsoon" | "itcz" | "shearline" | "ridge" | "general";
+  title: string;
+  description: string;
+  lat: number | null;
+  lon: number | null;
+  affectedAreas: string[];
+  isActive: boolean;
+  updatedAt: string;
+}
+
 export interface Earthquake {
   id: number;
   magnitude: number;

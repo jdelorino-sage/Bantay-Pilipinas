@@ -20,6 +20,7 @@ export class App {
   private api: ApiClient;
   private panelInstances: RefreshablePanel[] = [];
   private ticker: NewsTicker | null = null;
+  private consecutiveHealthFailures = 0;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -113,15 +114,19 @@ export class App {
     if (!statusEl) return;
     try {
       await this.api.getHealth();
+      this.consecutiveHealthFailures = 0;
       statusEl.textContent = "LIVE";
       statusEl.className = "status-indicator live";
       statusEl.style.color = "";
       statusEl.style.borderColor = "";
     } catch {
-      statusEl.textContent = "OFFLINE";
-      statusEl.className = "status-indicator";
-      statusEl.style.color = "var(--accent-red, #ef5350)";
-      statusEl.style.borderColor = "var(--accent-red, #ef5350)";
+      this.consecutiveHealthFailures++;
+      if (this.consecutiveHealthFailures >= 2) {
+        statusEl.textContent = "OFFLINE";
+        statusEl.className = "status-indicator";
+        statusEl.style.color = "var(--accent-red, #ef5350)";
+        statusEl.style.borderColor = "var(--accent-red, #ef5350)";
+      }
     }
   }
 }

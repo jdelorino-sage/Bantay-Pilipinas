@@ -7,6 +7,7 @@ import type {
   Typhoon,
   Earthquake,
   VolcanoStatus,
+  WeatherAdvisory,
   EconomicDataPoint,
   RegionalStabilityScore,
   AISummary,
@@ -27,24 +28,33 @@ function emptyMeta(): { freshness: string; timestamp: string } {
   return { freshness: "offline", timestamp: new Date().toISOString() };
 }
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> {
+async function attemptFetch<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {};
   if (init?.body) {
     headers["Content-Type"] = "application/json";
   }
+  const res = await fetch(url, { headers, ...init });
+  if (!res.ok) {
+    throw new Error(`API ${res.status}: ${res.statusText}`);
+  }
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(`Expected JSON but got ${contentType}`);
+  }
+  return await res.json();
+}
+
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> {
   try {
-    const res = await fetch(`${API_BASE}${path}`, { headers, ...init });
-    if (!res.ok) {
-      throw new Error(`API ${res.status}: ${res.statusText}`);
+    return await attemptFetch<T>(`${API_BASE}${path}`, init);
+  } catch (primaryErr) {
+    if (API_BASE) {
+      try {
+        return await attemptFetch<T>(path, init);
+      } catch { /* fall through */ }
     }
-    const contentType = res.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      throw new Error(`Expected JSON but got ${contentType}`);
-    }
-    return await res.json();
-  } catch (err) {
-    console.warn(`[api] ${path}:`, err);
-    throw err;
+    console.warn(`[api] ${path}:`, primaryErr);
+    throw primaryErr;
   }
 }
 
@@ -80,8 +90,8 @@ export class ApiClient {
     });
   }
 
-  async getDisaster(): Promise<ApiResponse<{ typhoons: Typhoon[]; earthquakes: Earthquake[]; volcanoes: VolcanoStatus[] }>> {
-    return fetchJsonWithFallback("/api/disaster", { typhoons: [], earthquakes: [], volcanoes: [] });
+  async getDisaster(): Promise<ApiResponse<{ typhoons: Typhoon[]; earthquakes: Earthquake[]; volcanoes: VolcanoStatus[]; weatherAdvisories: WeatherAdvisory[] }>> {
+    return fetchJsonWithFallback("/api/disaster", { typhoons: [], earthquakes: [], volcanoes: [], weatherAdvisories: [] });
   }
 
   async getMarket(): Promise<ApiResponse<EconomicDataPoint[]>> {
@@ -114,14 +124,26 @@ export class ApiClient {
   }
 
   async getHealth(): Promise<HealthResponse> {
-    const res = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) {
-      throw new Error(`Health check failed: ${res.status}`);
+    const urls = API_BASE
+      ? [`${API_BASE}/api/health`, "/api/health"]
+      : ["/api/health"];
+
+    let lastErr: Error | null = null;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) {
+          throw new Error(`Health check failed: ${res.status}`);
+        }
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error(`Health check returned non-JSON: ${contentType}`);
+        }
+        return await res.json();
+      } catch (err) {
+        lastErr = err as Error;
+      }
     }
-    const contentType = res.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      throw new Error(`Health check returned non-JSON: ${contentType}`);
-    }
-    return res.json();
+    throw lastErr || new Error("Health check failed");
   }
 }

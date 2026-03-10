@@ -1,7 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import type { ApiResponse, Typhoon, Earthquake, VolcanoStatus } from "@bantay-pilipinas/shared";
 import { getStoredEarthquakes, getStoredVolcanoes } from "../scrapers/phivolcs-scraper.js";
-import { getStoredTyphoons } from "../scrapers/pagasa-scraper.js";
+import { getStoredTyphoons, getStoredAdvisories } from "../scrapers/pagasa-scraper.js";
+import type { WeatherAdvisory } from "../scrapers/pagasa-scraper.js";
 
 export function registerDisasterRoutes(app: FastifyInstance): void {
   app.get("/api/disaster", async () => {
@@ -35,8 +36,20 @@ export function registerDisasterRoutes(app: FastifyInstance): void {
       freshness = "error";
     }
 
-    const response: ApiResponse<{ typhoons: Typhoon[]; earthquakes: Earthquake[]; volcanoes: VolcanoStatus[] }> = {
-      data: { typhoons, earthquakes, volcanoes },
+    let weatherAdvisories: WeatherAdvisory[];
+    try {
+      weatherAdvisories = await getStoredAdvisories();
+    } catch {
+      weatherAdvisories = [];
+    }
+
+    const response: ApiResponse<{
+      typhoons: Typhoon[];
+      earthquakes: Earthquake[];
+      volcanoes: VolcanoStatus[];
+      weatherAdvisories: WeatherAdvisory[];
+    }> = {
+      data: { typhoons, earthquakes, volcanoes, weatherAdvisories },
       meta: { freshness, timestamp: new Date().toISOString() },
     };
     return response;

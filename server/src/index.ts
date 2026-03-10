@@ -28,13 +28,18 @@ async function main(): Promise<void> {
     app.log.warn(`Database migration failed (server will continue with in-memory fallback): ${err}`);
   }
 
-  const origins = [FRONTEND_URL, "https://bantay-pilipinas.netlify.app"];
+  const staticOrigins = [FRONTEND_URL, "https://bantay-pilipinas.netlify.app"];
   if (process.env.NODE_ENV !== "production") {
-    origins.push("http://localhost:5173");
+    staticOrigins.push("http://localhost:5173");
   }
 
   await app.register(cors, {
-    origin: origins,
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+      if (staticOrigins.includes(origin)) return cb(null, true);
+      if (origin.endsWith(".netlify.app") || origin.endsWith(".netlify.live")) return cb(null, true);
+      cb(null, false);
+    },
   });
 
   await app.register(rateLimit, {
