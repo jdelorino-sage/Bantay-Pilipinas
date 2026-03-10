@@ -1,5 +1,6 @@
 import { ApiClient } from "./services/api-client";
 import { MapContainer } from "./components/MapContainer";
+import { NewsTicker } from "./components/NewsTicker";
 import { NewsPanel } from "./components/NewsPanel";
 import { WPSPanel } from "./components/WPSPanel";
 import { DisasterPanel } from "./components/DisasterPanel";
@@ -18,6 +19,7 @@ export class App {
   private container: HTMLElement;
   private api: ApiClient;
   private panelInstances: RefreshablePanel[] = [];
+  private ticker: NewsTicker | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -27,6 +29,7 @@ export class App {
   async init(): Promise<void> {
     this.container.innerHTML = "";
     this.renderLayout();
+    this.initTicker();
     this.initMap();
     this.initPanels();
     this.registerKeyboardShortcuts();
@@ -40,15 +43,23 @@ export class App {
       <header class="app-header">
         <h1 class="app-title">BANTAY PILIPINAS</h1>
         <div class="header-controls">
-          <span class="status-indicator" id="connection-status">LIVE</span>
+          <span class="status-indicator live" id="connection-status">LIVE</span>
         </div>
       </header>
+      <div id="ticker-container"></div>
       <main class="app-main">
         <div class="map-area" id="map-container"></div>
         <aside class="panel-sidebar" id="panel-sidebar"></aside>
       </main>
     `;
     this.container.appendChild(layout);
+  }
+
+  private initTicker(): void {
+    const tickerContainer = document.getElementById("ticker-container");
+    if (!tickerContainer) return;
+    this.ticker = new NewsTicker(this.api);
+    tickerContainer.appendChild(this.ticker.render());
   }
 
   private initMap(): void {
@@ -83,7 +94,6 @@ export class App {
     document.addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        // TODO: open search modal
       }
     });
   }
@@ -104,10 +114,14 @@ export class App {
     try {
       await this.api.getHealth();
       statusEl.textContent = "LIVE";
+      statusEl.className = "status-indicator live";
       statusEl.style.color = "";
+      statusEl.style.borderColor = "";
     } catch {
       statusEl.textContent = "OFFLINE";
+      statusEl.className = "status-indicator";
       statusEl.style.color = "var(--accent-red, #ef5350)";
+      statusEl.style.borderColor = "var(--accent-red, #ef5350)";
     }
   }
 }
