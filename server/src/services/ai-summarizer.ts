@@ -1,8 +1,10 @@
 import type { AISummary, FocalPoint } from "@bantay-pilipinas/shared";
+import Anthropic from "@anthropic-ai/sdk";
 import { CircuitBreaker } from "./circuit-breaker.js";
 
-type Provider = "groq" | "openrouter" | "ollama" | "none";
+type Provider = "anthropic" | "groq" | "openrouter" | "ollama" | "none";
 
+const anthropicBreaker = new CircuitBreaker("anthropic-ai", 3, 60_000);
 const groqBreaker = new CircuitBreaker("groq-ai", 3, 60_000);
 const openRouterBreaker = new CircuitBreaker("openrouter-ai", 3, 60_000);
 const ollamaBreaker = new CircuitBreaker("ollama-ai", 3, 30_000);
@@ -17,6 +19,32 @@ Focus on:
 5. Major political developments
 
 Format: 2-3 paragraph briefing. Lead with the most critical developments. Use specific names, locations, and figures. Reference source reliability (Tier 1 = government/wire, Tier 2 = major national, Tier 3 = specialist). End with a threat assessment summary.`;
+
+async function tryAnthropic(headlines: string[]): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey || !anthropicBreaker.canExecute()) return null;
+
+  try {
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      system: PH_SYSTEM_PROMPT,
+      messages: [
+        { role: "user", content: `Headlines:\n${headlines.map((h, i) => `${i + 1}. ${h}`).join("\n")}` },
+      ],
+    });
+
+    const textBlock = message.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") throw new Error("No text in response");
+    anthropicBreaker.recordSuccess();
+    return textBlock.text;
+  } catch (err) {
+    anthropicBreaker.recordFailure();
+    console.error("[ai] Anthropic failed:", (err as Error).message);
+    return null;
+  }
+}
 
 async function tryGroq(headlines: string[]): Promise<string | null> {
   const apiKey = process.env.GROQ_API_KEY;
@@ -157,6 +185,7 @@ function extractFocalPoints(text: string, headlines: string[]): FocalPoint[] {
 
 export async function generateSummary(headlines: string[]): Promise<AISummary> {
   const providers: { name: Provider; fn: (h: string[]) => Promise<string | null> }[] = [
+    { name: "anthropic", fn: tryAnthropic },
     { name: "groq", fn: tryGroq },
     { name: "openrouter", fn: tryOpenRouter },
     { name: "ollama", fn: tryOllama },
@@ -175,7 +204,7 @@ export async function generateSummary(headlines: string[]): Promise<AISummary> {
   }
 
   return {
-    summaryText: `Philippine intelligence briefing based on ${headlines.length} headlines. Configure GROQ_API_KEY or OPENROUTER_API_KEY for AI-powered summaries.`,
+    summaryText: `Philippine intelligence briefing based on ${headlines.length} headlines. Configure ANTHROPIC_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY for AI-powered summaries.`,
     focalPoints: extractFocalPoints("", headlines),
     provider: "none",
     createdAt: new Date().toISOString(),

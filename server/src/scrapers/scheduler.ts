@@ -48,8 +48,8 @@ export function getScraperStatuses(): Record<string, ScraperStatus> {
 }
 
 export function startScheduler(): void {
-  // RSS feeds — every 3 minutes
-  cron.schedule("*/3 * * * *", () => {
+  // RSS feeds — every 60 seconds
+  cron.schedule("* * * * *", () => {
     runWithStatus("rss", () => runAggregator(PH_FEEDS));
   });
 

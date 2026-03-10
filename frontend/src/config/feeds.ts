@@ -14,15 +14,27 @@ export const PH_FEEDS: FeedDefinition[] = [
   { id: "pna", name: "Philippine News Agency", url: "https://www.pna.gov.ph/rss.xml", tier: SourceTier.WireGov, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "dfa", name: "Department of Foreign Affairs", url: "https://dfa.gov.ph/rss", tier: SourceTier.WireGov, category: NewsCategory.NationalPolitics, language: "en" },
 
+  // Tier 1 — Government Social Media / Official Channels
+  { id: "pagasa-weather", name: "PAGASA Weather", url: "https://www.pagasa.dost.gov.ph/rss.xml", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
+  { id: "phivolcs-eq", name: "PHIVOLCS Earthquake", url: "https://earthquake.phivolcs.dost.gov.ph/rss/feed", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
+  { id: "ndrrmc", name: "NDRRMC Updates", url: "https://ndrrmc.gov.ph/rss.xml", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
+  { id: "pcg", name: "Philippine Coast Guard", url: "https://www.coastguard.gov.ph/index.php/11-news?format=feed", tier: SourceTier.WireGov, category: NewsCategory.WPSMaritime, language: "en" },
+
   // Tier 2 — Major National Outlets
   { id: "inquirer", name: "Inquirer.net", url: "https://newsinfo.inquirer.net/feed", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "rappler", name: "Rappler", url: "https://www.rappler.com/feed/", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "rappler-weather", name: "Rappler Weather", url: "https://www.rappler.com/topic/weather/feed/", tier: SourceTier.MajorNational, category: NewsCategory.Disaster, language: "en" },
   { id: "philstar", name: "PhilStar", url: "https://www.philstar.com/rss/nation", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "mb", name: "Manila Bulletin", url: "https://mb.com.ph/rss/news", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "gma", name: "GMA News Online", url: "https://data.gmanetwork.com/gno/rss/news/feed.xml", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "abs-cbn", name: "ABS-CBN News", url: "https://news.abs-cbn.com/rss.xml", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "bworld", name: "BusinessWorld", url: "https://www.bworldonline.com/feed/", tier: SourceTier.MajorNational, category: NewsCategory.Economy, language: "en" },
   { id: "bmirror", name: "BusinessMirror", url: "https://businessmirror.com.ph/feed/", tier: SourceTier.MajorNational, category: NewsCategory.Economy, language: "en" },
+
+  // Tier 2 — Social Media RSS (News Outlet Social Feeds)
+  { id: "inquirer-social", name: "Inquirer Social", url: "https://newsinfo.inquirer.net/tag/trending/feed", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "rappler-social", name: "Rappler Social", url: "https://www.rappler.com/topic/social-media/feed/", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "gma-social", name: "GMA Social Media", url: "https://www.gmanetwork.com/news/hashtag/rss/feed.xml", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
 
   // Tier 3 — Specialist & Regional
   { id: "verafiles", name: "Vera Files", url: "https://verafiles.org/feed", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
