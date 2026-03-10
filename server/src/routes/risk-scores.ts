@@ -36,7 +36,7 @@ async function getLatestRegionScores(): Promise<RegionalStabilityScore[]> {
     }
   }
 
-  const scores = computeAllRegions();
+  const scores = await computeAllRegions();
   cache.set("risk:regions", scores, SCORE_TTL);
   return scores;
 }

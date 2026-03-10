@@ -4,14 +4,34 @@ import { hasDatabaseUrl, query } from "../db/client.js";
 import { TABLES } from "../db/schema.js";
 import { computeWPSTension } from "./wps-tension-scorer.js";
 
-export function computeRegionalStability(
+async function getTrend(regionId: string, currentScore: number): Promise<"rising" | "falling" | "stable"> {
+  if (!hasDatabaseUrl()) return "stable";
+  try {
+    const result = await query(
+      `SELECT score FROM ${TABLES.STABILITY_SCORES}
+       WHERE region_id = $1 ORDER BY computed_at DESC LIMIT 1 OFFSET 1`,
+      [regionId]
+    );
+    if (result.rows.length === 0) return "stable";
+    const prev = parseFloat(result.rows[0].score);
+    const diff = currentScore - prev;
+    if (diff > 3) return "rising";
+    if (diff < -3) return "falling";
+    return "stable";
+  } catch {
+    return "stable";
+  }
+}
+
+export async function computeRegionalStability(
   regionId: RegionId,
   unrest: number,
   security: number,
   information: number
-): RegionalStabilityScore {
+): Promise<RegionalStabilityScore> {
   const baseline = REGION_BASELINES[regionId];
   const score = baseline * 0.3 + unrest * 0.25 + security * 0.25 + information * 0.2;
+  const trend = await getTrend(regionId, score);
 
   return {
     regionId,
@@ -19,7 +39,7 @@ export function computeRegionalStability(
     components: { baselineRisk: baseline, unrest, security, information },
     boosts: {},
     level: getStabilityLevel(score),
-    trend: "stable",
+    trend,
     computedAt: new Date().toISOString(),
   };
 }
@@ -70,13 +90,7 @@ async function getVesselIntrusionScore(): Promise<number> {
   }
 }
 
-export function computeAllRegions(): RegionalStabilityScore[] {
-  return Object.values(RegionId).map((regionId) =>
-    computeRegionalStability(regionId, 20, 20, 20)
-  );
-}
-
-export async function runScoreComputation(): Promise<void> {
+export async function computeAllRegions(): Promise<RegionalStabilityScore[]> {
   const [ncrUnrest, barmmConflict, wpsVessels, carConflict, disasterNews] = await Promise.all([
     getConflictScore("Metro Manila"),
     getConflictScore("Mindanao"),
@@ -91,13 +105,38 @@ export async function runScoreComputation(): Promise<void> {
     getNewsVelocityForCategory("defense"),
   ]);
 
-  const regions: RegionalStabilityScore[] = [
+  return Promise.all([
     computeRegionalStability(RegionId.NCR, ncrUnrest, 20, ncrNews),
     computeRegionalStability(RegionId.BARMM, barmmConflict, Math.min(barmmConflict + 10, 100), barmmNews),
     computeRegionalStability(RegionId.WPS, 0, wpsVessels, wpsNews),
     computeRegionalStability(RegionId.CAR, carConflict, Math.min(carConflict + 5, 100), 20),
     computeRegionalStability(RegionId.EVBicol, 15, 20, disasterNews),
-  ];
+  ]);
+}
+
+export async function runScoreComputation(): Promise<void> {
+  const [ncrUnrest, barmmConflict, wpsVessels, carConflict, disasterNews] = await Promise.all([
+    getConflictScore("Metro Manila"),
+    getConflictScore("Mindanao"),
+    getVesselIntrusionScore(),
+    getConflictScore("Cordillera"),
+    getNewsVelocityForCategory("disaster"),
+  ]);
+
+  const [ncrNews, wpsNews, barmmNews, militaryActivity] = await Promise.all([
+    getNewsVelocityForCategory("national-politics"),
+    getNewsVelocityForCategory("wps-maritime"),
+    getNewsVelocityForCategory("defense"),
+    getNewsVelocityForCategory("defense"),
+  ]);
+
+  const regions = await Promise.all([
+    computeRegionalStability(RegionId.NCR, ncrUnrest, 20, ncrNews),
+    computeRegionalStability(RegionId.BARMM, barmmConflict, Math.min(barmmConflict + 10, 100), barmmNews),
+    computeRegionalStability(RegionId.WPS, 0, wpsVessels, wpsNews),
+    computeRegionalStability(RegionId.CAR, carConflict, Math.min(carConflict + 5, 100), 20),
+    computeRegionalStability(RegionId.EVBicol, 15, 20, disasterNews),
+  ]);
 
   if (hasDatabaseUrl()) {
     for (const r of regions) {
@@ -109,7 +148,7 @@ export async function runScoreComputation(): Promise<void> {
       ).catch((err: unknown) => console.error("[stability] DB insert failed:", (err as Error).message));
     }
 
-    const wpsTension = computeWPSTension(wpsVessels, wpsNews, 20, wpsNews);
+    const wpsTension = computeWPSTension(wpsVessels, wpsNews, militaryActivity, wpsNews);
     await query(
       `INSERT INTO ${TABLES.WPS_TENSION_SCORES}
        (score, components, level, trend, computed_at)

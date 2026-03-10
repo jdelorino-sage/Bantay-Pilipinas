@@ -10,12 +10,12 @@ export const PH_FEEDS: FeedConfig[] = [
   // Tier 1 — Wire Services & Official Government
   { id: "pna", name: "Philippine News Agency", url: "https://www.pna.gov.ph/rss.xml", tier: 1, category: "national-politics" },
   { id: "dfa", name: "Department of Foreign Affairs", url: "https://dfa.gov.ph/rss", tier: 1, category: "national-politics" },
-
-  // Tier 1 — Government Social Media / Official Channels
   { id: "pagasa-weather", name: "PAGASA Weather", url: "https://www.pagasa.dost.gov.ph/rss.xml", tier: 1, category: "disaster" },
   { id: "phivolcs-eq", name: "PHIVOLCS Earthquake", url: "https://earthquake.phivolcs.dost.gov.ph/rss/feed", tier: 1, category: "disaster" },
   { id: "ndrrmc", name: "NDRRMC Updates", url: "https://ndrrmc.gov.ph/rss.xml", tier: 1, category: "disaster" },
   { id: "pcg", name: "Philippine Coast Guard", url: "https://www.coastguard.gov.ph/index.php/11-news?format=feed", tier: 1, category: "wps-maritime" },
+  { id: "doh", name: "Department of Health", url: "https://doh.gov.ph/feed", tier: 1, category: "disaster" },
+  { id: "dswd", name: "DSWD", url: "https://www.dswd.gov.ph/feed/", tier: 1, category: "national-politics" },
 
   // Tier 2 — Major National Outlets
   { id: "inquirer", name: "Inquirer.net", url: "https://newsinfo.inquirer.net/feed", tier: 2, category: "national-politics" },
@@ -27,9 +27,10 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "abs-cbn", name: "ABS-CBN News", url: "https://news.abs-cbn.com/rss.xml", tier: 2, category: "national-politics" },
   { id: "bworld", name: "BusinessWorld", url: "https://www.bworldonline.com/feed/", tier: 2, category: "economy" },
   { id: "bmirror", name: "BusinessMirror", url: "https://businessmirror.com.ph/feed/", tier: 2, category: "economy" },
+  { id: "cnnph", name: "CNN Philippines", url: "https://www.cnnphilippines.com/rss/news.xml", tier: 2, category: "national-politics" },
 
-  // Tier 2 — Social Media RSS (News Outlet Social Feeds)
-  { id: "inquirer-social", name: "Inquirer Social", url: "https://newsinfo.inquirer.net/tag/trending/feed", tier: 2, category: "national-politics" },
+  // Tier 2 — News Outlet Social/Trending Feeds
+  { id: "inquirer-social", name: "Inquirer Trending", url: "https://newsinfo.inquirer.net/tag/trending/feed", tier: 2, category: "national-politics" },
   { id: "rappler-social", name: "Rappler Social", url: "https://www.rappler.com/topic/social-media/feed/", tier: 2, category: "national-politics" },
   { id: "gma-social", name: "GMA Social Media", url: "https://www.gmanetwork.com/news/hashtag/rss/feed.xml", tier: 2, category: "national-politics" },
 
@@ -39,9 +40,29 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "sunstar", name: "SunStar", url: "https://www.sunstar.com.ph/rssFeed/0", tier: 3, category: "regional" },
   { id: "manilatimes", name: "The Manila Times", url: "https://www.manilatimes.net/feed/", tier: 3, category: "national-politics" },
 
-  // Tier 4 — Aggregators & International Coverage
+  // Tier 3 — Social Media & Community (Reddit, YouTube)
+  { id: "reddit-ph", name: "Reddit r/Philippines", url: "https://www.reddit.com/r/Philippines/.rss", tier: 3, category: "national-politics" },
+  { id: "reddit-ph-news", name: "Reddit r/PHNews", url: "https://www.reddit.com/r/phnews/.rss", tier: 3, category: "national-politics" },
+  { id: "yt-abscbn", name: "ABS-CBN YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCstEtN1GBximQ0ZMy2FE0dA", tier: 3, category: "national-politics" },
+  { id: "yt-gma", name: "GMA YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCVPbYEWwYOH5jm6Bvi0XkYg", tier: 3, category: "national-politics" },
+  { id: "yt-cnnph", name: "CNN PH YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCeEj9SKvxkOTkmGmFSMredQ", tier: 3, category: "national-politics" },
+
+  // Tier 4 — Google News Aggregation (Philippines-focused)
+  { id: "gnews-ph", name: "Google News PH", url: "https://news.google.com/rss/search?q=Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-wps", name: "Google News WPS", url: "https://news.google.com/rss/search?q=%22West+Philippine+Sea%22&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "wps-maritime" },
+  { id: "gnews-typhoon", name: "Google News Typhoon PH", url: "https://news.google.com/rss/search?q=typhoon+Philippines+PAGASA&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
+  { id: "gnews-economy", name: "Google News PH Economy", url: "https://news.google.com/rss/search?q=Philippines+economy+peso+BSP&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  { id: "gnews-ofw", name: "Google News OFW", url: "https://news.google.com/rss/search?q=OFW+remittance+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "ofw-diaspora" },
+
+  // Tier 4 — International Coverage
   { id: "reuters-ph", name: "Reuters Philippines", url: "https://www.reuters.com/rss/news/philippines", tier: 4, category: "national-politics" },
   { id: "scmp", name: "South China Morning Post", url: "https://www.scmp.com/rss/91/feed", tier: 4, category: "wps-maritime" },
   { id: "diplomat", name: "The Diplomat", url: "https://thediplomat.com/feed/", tier: 4, category: "defense" },
   { id: "benarnews", name: "Benar News", url: "https://www.benarnews.org/english/rss/rss.xml", tier: 4, category: "defense" },
+  { id: "aljazeera-asia", name: "Al Jazeera Asia", url: "https://www.aljazeera.com/xml/rss/all.xml", tier: 4, category: "defense" },
+  { id: "bbc-asia", name: "BBC Asia", url: "https://feeds.bbci.co.uk/news/world/asia/rss.xml", tier: 4, category: "national-politics" },
+  { id: "nikkei-asia", name: "Nikkei Asia", url: "https://asia.nikkei.com/rss", tier: 4, category: "economy" },
+  { id: "asia-times", name: "Asia Times", url: "https://asiatimes.com/feed/", tier: 4, category: "defense" },
+  { id: "channel-news-asia", name: "Channel NewsAsia", url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511", tier: 4, category: "defense" },
+  { id: "pse-edge", name: "PSE Edge Disclosures", url: "https://edge.pse.com.ph/rss.ax", tier: 4, category: "economy" },
 ];

@@ -13,12 +13,12 @@ export const PH_FEEDS: FeedDefinition[] = [
   // Tier 1 — Wire Services & Official Government
   { id: "pna", name: "Philippine News Agency", url: "https://www.pna.gov.ph/rss.xml", tier: SourceTier.WireGov, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "dfa", name: "Department of Foreign Affairs", url: "https://dfa.gov.ph/rss", tier: SourceTier.WireGov, category: NewsCategory.NationalPolitics, language: "en" },
-
-  // Tier 1 — Government Social Media / Official Channels
   { id: "pagasa-weather", name: "PAGASA Weather", url: "https://www.pagasa.dost.gov.ph/rss.xml", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
   { id: "phivolcs-eq", name: "PHIVOLCS Earthquake", url: "https://earthquake.phivolcs.dost.gov.ph/rss/feed", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
   { id: "ndrrmc", name: "NDRRMC Updates", url: "https://ndrrmc.gov.ph/rss.xml", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
   { id: "pcg", name: "Philippine Coast Guard", url: "https://www.coastguard.gov.ph/index.php/11-news?format=feed", tier: SourceTier.WireGov, category: NewsCategory.WPSMaritime, language: "en" },
+  { id: "doh", name: "Department of Health", url: "https://doh.gov.ph/feed", tier: SourceTier.WireGov, category: NewsCategory.Disaster, language: "en" },
+  { id: "dswd", name: "DSWD", url: "https://www.dswd.gov.ph/feed/", tier: SourceTier.WireGov, category: NewsCategory.NationalPolitics, language: "en" },
 
   // Tier 2 — Major National Outlets
   { id: "inquirer", name: "Inquirer.net", url: "https://newsinfo.inquirer.net/feed", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
@@ -30,9 +30,10 @@ export const PH_FEEDS: FeedDefinition[] = [
   { id: "abs-cbn", name: "ABS-CBN News", url: "https://news.abs-cbn.com/rss.xml", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "bworld", name: "BusinessWorld", url: "https://www.bworldonline.com/feed/", tier: SourceTier.MajorNational, category: NewsCategory.Economy, language: "en" },
   { id: "bmirror", name: "BusinessMirror", url: "https://businessmirror.com.ph/feed/", tier: SourceTier.MajorNational, category: NewsCategory.Economy, language: "en" },
+  { id: "cnnph", name: "CNN Philippines", url: "https://www.cnnphilippines.com/rss/news.xml", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
 
-  // Tier 2 — Social Media RSS (News Outlet Social Feeds)
-  { id: "inquirer-social", name: "Inquirer Social", url: "https://newsinfo.inquirer.net/tag/trending/feed", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
+  // Tier 2 — News Outlet Social/Trending Feeds
+  { id: "inquirer-social", name: "Inquirer Trending", url: "https://newsinfo.inquirer.net/tag/trending/feed", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "rappler-social", name: "Rappler Social", url: "https://www.rappler.com/topic/social-media/feed/", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "gma-social", name: "GMA Social Media", url: "https://www.gmanetwork.com/news/hashtag/rss/feed.xml", tier: SourceTier.MajorNational, category: NewsCategory.NationalPolitics, language: "en" },
 
@@ -42,9 +43,29 @@ export const PH_FEEDS: FeedDefinition[] = [
   { id: "sunstar", name: "SunStar", url: "https://www.sunstar.com.ph/rssFeed/0", tier: SourceTier.SpecialistRegional, category: NewsCategory.Regional, language: "en" },
   { id: "manilatimes", name: "The Manila Times", url: "https://www.manilatimes.net/feed/", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
 
-  // Tier 4 — Aggregators & International Coverage
+  // Tier 3 — Social Media & Community (Reddit, YouTube)
+  { id: "reddit-ph", name: "Reddit r/Philippines", url: "https://www.reddit.com/r/Philippines/.rss", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "reddit-ph-news", name: "Reddit r/PHNews", url: "https://www.reddit.com/r/phnews/.rss", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-abscbn", name: "ABS-CBN YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCstEtN1GBximQ0ZMy2FE0dA", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-gma", name: "GMA YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCVPbYEWwYOH5jm6Bvi0XkYg", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "yt-cnnph", name: "CNN PH YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCeEj9SKvxkOTkmGmFSMredQ", tier: SourceTier.SpecialistRegional, category: NewsCategory.NationalPolitics, language: "en" },
+
+  // Tier 4 — Google News Aggregation (Philippines-focused)
+  { id: "gnews-ph", name: "Google News PH", url: "https://news.google.com/rss/search?q=Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: SourceTier.AggregatorInternational, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "gnews-wps", name: "Google News WPS", url: "https://news.google.com/rss/search?q=%22West+Philippine+Sea%22&hl=en-PH&gl=PH&ceid=PH:en", tier: SourceTier.AggregatorInternational, category: NewsCategory.WPSMaritime, language: "en" },
+  { id: "gnews-typhoon", name: "Google News Typhoon PH", url: "https://news.google.com/rss/search?q=typhoon+Philippines+PAGASA&hl=en-PH&gl=PH&ceid=PH:en", tier: SourceTier.AggregatorInternational, category: NewsCategory.Disaster, language: "en" },
+  { id: "gnews-economy", name: "Google News PH Economy", url: "https://news.google.com/rss/search?q=Philippines+economy+peso+BSP&hl=en-PH&gl=PH&ceid=PH:en", tier: SourceTier.AggregatorInternational, category: NewsCategory.Economy, language: "en" },
+  { id: "gnews-ofw", name: "Google News OFW", url: "https://news.google.com/rss/search?q=OFW+remittance+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: SourceTier.AggregatorInternational, category: NewsCategory.OFW, language: "en" },
+
+  // Tier 4 — International Coverage
   { id: "reuters-ph", name: "Reuters Philippines", url: "https://www.reuters.com/rss/news/philippines", tier: SourceTier.AggregatorInternational, category: NewsCategory.NationalPolitics, language: "en" },
   { id: "scmp", name: "South China Morning Post", url: "https://www.scmp.com/rss/91/feed", tier: SourceTier.AggregatorInternational, category: NewsCategory.WPSMaritime, language: "en" },
   { id: "diplomat", name: "The Diplomat", url: "https://thediplomat.com/feed/", tier: SourceTier.AggregatorInternational, category: NewsCategory.Defense, language: "en" },
   { id: "benarnews", name: "Benar News", url: "https://www.benarnews.org/english/rss/rss.xml", tier: SourceTier.AggregatorInternational, category: NewsCategory.Defense, language: "en" },
+  { id: "aljazeera-asia", name: "Al Jazeera Asia", url: "https://www.aljazeera.com/xml/rss/all.xml", tier: SourceTier.AggregatorInternational, category: NewsCategory.Defense, language: "en" },
+  { id: "bbc-asia", name: "BBC Asia", url: "https://feeds.bbci.co.uk/news/world/asia/rss.xml", tier: SourceTier.AggregatorInternational, category: NewsCategory.NationalPolitics, language: "en" },
+  { id: "nikkei-asia", name: "Nikkei Asia", url: "https://asia.nikkei.com/rss", tier: SourceTier.AggregatorInternational, category: NewsCategory.Economy, language: "en" },
+  { id: "asia-times", name: "Asia Times", url: "https://asiatimes.com/feed/", tier: SourceTier.AggregatorInternational, category: NewsCategory.Defense, language: "en" },
+  { id: "channel-news-asia", name: "Channel NewsAsia", url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511", tier: SourceTier.AggregatorInternational, category: NewsCategory.Defense, language: "en" },
+  { id: "pse-edge", name: "PSE Edge Disclosures", url: "https://edge.pse.com.ph/rss.ax", tier: SourceTier.AggregatorInternational, category: NewsCategory.Economy, language: "en" },
 ];

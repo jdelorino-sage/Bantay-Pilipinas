@@ -39,16 +39,15 @@ export function registerSummarizeRoutes(app: FastifyInstance): void {
 
     const articles = await getStoredArticles(undefined, 50);
     const headlineMap = new Map(articles.map((a) => [a.id, a.title]));
-    const headlines = headlineIds
+    const matched = headlineIds
       .map((id) => headlineMap.get(id))
       .filter((h): h is string => h != null);
 
-    if (headlines.length === 0) {
-      const fallbackHeadlines = articles.slice(0, Math.min(headlineIds.length, 20)).map((a) => a.title);
-      headlines.push(...fallbackHeadlines);
-    }
+    const finalHeadlines = matched.length > 0
+      ? matched
+      : articles.slice(0, 20).map((a) => a.title);
 
-    const summary = await generateSummary(headlines.length > 0 ? headlines : ["No headlines available"]);
+    const summary = await generateSummary(finalHeadlines.length > 0 ? finalHeadlines : ["No headlines available"]);
     summaryCache.set(cacheKey, summary, CACHE_TTL);
 
     const response: ApiResponse<AISummary> = {

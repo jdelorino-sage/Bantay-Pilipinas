@@ -13,7 +13,15 @@ import type {
   HealthResponse,
 } from "@bantay-pilipinas/shared";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+function normalizeBase(raw: string): string {
+  let base = raw.trim().replace(/\/+$/, "");
+  if (base && !base.startsWith("http")) {
+    base = `https://${base}`;
+  }
+  return base;
+}
+
+const API_BASE = normalizeBase(import.meta.env.VITE_API_URL || "");
 
 function emptyMeta(): { freshness: string; timestamp: string } {
   return { freshness: "offline", timestamp: new Date().toISOString() };
@@ -106,7 +114,7 @@ export class ApiClient {
   }
 
   async getHealth(): Promise<HealthResponse> {
-    const res = await fetch(`${API_BASE}/api/health`);
+    const res = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) {
       throw new Error(`Health check failed: ${res.status}`);
     }

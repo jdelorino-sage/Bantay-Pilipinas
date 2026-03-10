@@ -4,7 +4,13 @@ import { hasDatabaseUrl, query } from "../db/client.js";
 import { TABLES } from "../db/schema.js";
 import type { FeedConfig } from "../config/feeds.js";
 
-const parser = new Parser({ timeout: 10_000 });
+const parser = new Parser({
+  timeout: 10_000,
+  headers: { "User-Agent": "BantayPilipinas/1.0 (Philippine News Monitor)" },
+});
+
+const MEMORY_STORE_MAX = 2000;
+const MEMORY_STORE_PRUNE = 500;
 
 interface StoredArticle {
   id: number;
@@ -58,6 +64,13 @@ async function storeArticle(
     );
   } else {
     if (memoryStore.has(urlHash)) return;
+    if (memoryStore.size >= MEMORY_STORE_MAX) {
+      const entries = [...memoryStore.entries()]
+        .sort((a, b) => (a[1].fetchedAt).localeCompare(b[1].fetchedAt));
+      for (let i = 0; i < MEMORY_STORE_PRUNE && i < entries.length; i++) {
+        memoryStore.delete(entries[i][0]);
+      }
+    }
     memoryStore.set(urlHash, {
       id: nextMemoryId++,
       urlHash,
