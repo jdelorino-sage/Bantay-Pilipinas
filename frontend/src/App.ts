@@ -1,12 +1,17 @@
 import { ApiClient } from "./services/api-client";
 import { MapContainer } from "./components/MapContainer";
+import { MapLegend } from "./components/MapLegend";
+import { LayerPanel } from "./components/LayerPanel";
 import { NewsTicker } from "./components/NewsTicker";
+import { LiveNewsPanel } from "./components/LiveNewsPanel";
 import { NewsPanel } from "./components/NewsPanel";
 import { WPSPanel } from "./components/WPSPanel";
 import { DisasterPanel } from "./components/DisasterPanel";
 import { MarketPanel } from "./components/MarketPanel";
 import { StabilityPanel } from "./components/StabilityPanel";
 import { InsightsPanel } from "./components/InsightsPanel";
+import { StrategicPosturePanel } from "./components/StrategicPosturePanel";
+import { RiskOverviewPanel } from "./components/RiskOverviewPanel";
 
 interface RefreshablePanel {
   render(): HTMLElement;
@@ -21,7 +26,6 @@ export class App {
   private panelInstances: RefreshablePanel[] = [];
   private ticker: NewsTicker | null = null;
   private consecutiveHealthFailures = 0;
-
   constructor(container: HTMLElement) {
     this.container = container;
     this.api = new ApiClient();
@@ -31,8 +35,10 @@ export class App {
     this.container.innerHTML = "";
     this.renderLayout();
     this.initTicker();
+    this.initLayerPanel();
     this.initMap();
-    this.initPanels();
+    this.initRightPanels();
+    this.startClock();
     this.registerKeyboardShortcuts();
     this.startPolling();
   }
@@ -42,18 +48,52 @@ export class App {
     layout.className = "app-layout";
     layout.innerHTML = `
       <header class="app-header">
-        <h1 class="app-title">BANTAY PILIPINAS</h1>
-        <div class="header-controls">
-          <span class="status-indicator live" id="connection-status">LIVE</span>
+        <div class="header-left">
+          <span class="variant-badge">PHILIPPINE</span>
+          <h1 class="app-title">BANTAY PILIPINAS</h1>
+          <span class="header-version">v0.1.0</span>
+        </div>
+        <div class="header-center">
+          <span class="status-indicator live" id="connection-status">
+            <span class="status-dot"></span> LIVE
+          </span>
+          <span class="alert-level" id="alert-level">
+            <span class="alert-label">ALERT</span>
+            <span class="alert-value" id="alert-value">1</span>
+          </span>
+        </div>
+        <div class="header-right">
+          <span class="header-notification" id="header-notif-count">0</span>
+          <button class="header-btn" id="btn-search" title="Search (Cmd+K)">Search</button>
+          <button class="header-btn" id="btn-settings" title="Settings">\u2699</button>
         </div>
       </header>
-      <div id="ticker-container"></div>
+      <div class="situation-bar">
+        <span class="situation-label">PHILIPPINE SITUATION</span>
+        <span class="situation-datetime" id="situation-datetime"></span>
+        <div class="situation-controls">
+          <button class="view-toggle active" id="btn-2d">2D</button>
+          <button class="view-toggle" id="btn-3d">3D</button>
+        </div>
+      </div>
       <main class="app-main">
-        <div class="map-area" id="map-container"></div>
-        <aside class="panel-sidebar" id="panel-sidebar"></aside>
+        <div id="layer-sidebar-container"></div>
+        <div class="map-area">
+          <div class="map-wrapper" id="map-container"></div>
+          <div id="map-legend-container"></div>
+        </div>
+        <div class="right-panels" id="right-panels"></div>
       </main>
+      <div id="ticker-container"></div>
     `;
     this.container.appendChild(layout);
+  }
+
+  private initLayerPanel(): void {
+    const container = document.getElementById("layer-sidebar-container");
+    if (!container) return;
+    const layerPanel = new LayerPanel();
+    container.appendChild(layerPanel.render());
   }
 
   private initTicker(): void {
@@ -68,27 +108,84 @@ export class App {
     if (mapEl) {
       new MapContainer(mapEl);
     }
+
+    const legendContainer = document.getElementById("map-legend-container");
+    if (legendContainer) {
+      const legend = new MapLegend();
+      legendContainer.appendChild(legend.render());
+    }
   }
 
-  private initPanels(): void {
-    const sidebar = document.getElementById("panel-sidebar");
-    if (!sidebar) return;
+  private initRightPanels(): void {
+    const rightPanels = document.getElementById("right-panels");
+    if (!rightPanels) return;
 
-    const panels: RefreshablePanel[] = [
-      new NewsPanel(this.api),
-      new WPSPanel(this.api),
-      new DisasterPanel(this.api),
-      new MarketPanel(this.api),
-      new StabilityPanel(this.api),
-      new InsightsPanel(this.api),
+    const liveNews = new LiveNewsPanel(this.api);
+    const insightsPanel = new InsightsPanel(this.api);
+    const posturePanel = new StrategicPosturePanel(this.api);
+    const riskPanel = new RiskOverviewPanel(this.api);
+    const stabilityPanel = new StabilityPanel(this.api);
+    const newsPanel = new NewsPanel(this.api);
+    const wpsPanel = new WPSPanel(this.api);
+    const disasterPanel = new DisasterPanel(this.api);
+    const marketPanel = new MarketPanel(this.api);
+
+    rightPanels.appendChild(liveNews.render());
+
+    const scrollArea = document.createElement("div");
+    scrollArea.className = "right-panels-scroll";
+
+    scrollArea.appendChild(insightsPanel.render());
+
+    const splitRow = document.createElement("div");
+    splitRow.className = "panel-split-row";
+    splitRow.appendChild(posturePanel.render());
+    splitRow.appendChild(riskPanel.render());
+    scrollArea.appendChild(splitRow);
+
+    scrollArea.appendChild(stabilityPanel.render());
+    scrollArea.appendChild(newsPanel.render());
+    scrollArea.appendChild(wpsPanel.render());
+    scrollArea.appendChild(disasterPanel.render());
+    scrollArea.appendChild(marketPanel.render());
+
+    rightPanels.appendChild(scrollArea);
+
+    this.panelInstances = [
+      liveNews,
+      insightsPanel,
+      posturePanel,
+      riskPanel,
+      stabilityPanel,
+      newsPanel,
+      wpsPanel,
+      disasterPanel,
+      marketPanel,
     ];
+  }
 
-    for (const panel of panels) {
-      const el = panel.render();
-      sidebar.appendChild(el);
-    }
-
-    this.panelInstances = panels;
+  private startClock(): void {
+    const update = () => {
+      const el = document.getElementById("situation-datetime");
+      if (!el) return;
+      const now = new Date();
+      const formatted = now.toLocaleDateString("en-PH", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Manila",
+      }).toUpperCase() + " " + now.toLocaleTimeString("en-PH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Manila",
+      }) + " PHT";
+      el.textContent = formatted;
+    };
+    update();
+    setInterval(update, 1000);
   }
 
   private registerKeyboardShortcuts(): void {
@@ -115,14 +212,14 @@ export class App {
     try {
       await this.api.getHealth();
       this.consecutiveHealthFailures = 0;
-      statusEl.textContent = "LIVE";
+      statusEl.innerHTML = '<span class="status-dot"></span> LIVE';
       statusEl.className = "status-indicator live";
       statusEl.style.color = "";
       statusEl.style.borderColor = "";
     } catch {
       this.consecutiveHealthFailures++;
       if (this.consecutiveHealthFailures >= 2) {
-        statusEl.textContent = "OFFLINE";
+        statusEl.innerHTML = "OFFLINE";
         statusEl.className = "status-indicator";
         statusEl.style.color = "var(--accent-red, #ef5350)";
         statusEl.style.borderColor = "var(--accent-red, #ef5350)";

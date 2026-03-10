@@ -1,7 +1,22 @@
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { PH_CENTER, PH_DEFAULT_ZOOM, WPS_FEATURES, EDCA_SITES, ACTIVE_VOLCANOES } from "../config/geo";
+import { PH_CENTER, PH_DEFAULT_ZOOM, WPS_FEATURES, EDCA_SITES, ACTIVE_VOLCANOES, FAULT_LINES } from "../config/geo";
+import { SUBMARINE_CABLES, MAJOR_PORTS } from "../config/infrastructure";
 import type { WPSFeature, EDCASite, VolcanoEntry } from "../config/geo";
+
+interface LayerGroup {
+  sourceId: string;
+  layerIds: string[];
+}
+
+const LAYER_GROUPS: Record<string, LayerGroup> = {
+  "wps-features": { sourceId: "wps-features", layerIds: ["wps-features-circle", "wps-features-label"] },
+  "edca-sites": { sourceId: "edca-sites", layerIds: ["edca-sites-circle", "edca-sites-label"] },
+  "volcanoes": { sourceId: "volcanoes", layerIds: ["volcanoes-circle", "volcanoes-label"] },
+  "fault-lines": { sourceId: "fault-lines", layerIds: ["fault-lines-circle", "fault-lines-label"] },
+  "submarine-cables": { sourceId: "submarine-cables", layerIds: ["submarine-cables-circle", "submarine-cables-label"] },
+  "major-ports": { sourceId: "major-ports", layerIds: ["major-ports-circle", "major-ports-label"] },
+};
 
 export class DeckGLMap {
   private map: maplibregl.Map | null = null;
@@ -31,7 +46,30 @@ export class DeckGLMap {
       this.addWPSFeatures();
       this.addEDCASites();
       this.addVolcanoes();
+      this.addFaultLines();
+      this.addSubmarineCables();
+      this.addMajorPorts();
     });
+
+    document.addEventListener("layer-toggle", ((e: CustomEvent) => {
+      const { layerId, visible } = e.detail;
+      this.setLayerVisibility(layerId, visible);
+    }) as EventListener);
+  }
+
+  private setLayerVisibility(groupId: string, visible: boolean): void {
+    if (!this.map) return;
+    const group = LAYER_GROUPS[groupId];
+    if (!group) return;
+
+    const value = visible ? "visible" : "none";
+    for (const layerId of group.layerIds) {
+      try {
+        this.map.setLayoutProperty(layerId, "visibility", value);
+      } catch {
+        // layer may not exist yet
+      }
+    }
   }
 
   private addWPSFeatures(): void {
@@ -180,6 +218,160 @@ export class DeckGLMap {
 
     this.addPopup("volcanoes-circle", (props) =>
       `<strong>${props.name}</strong><br/>Active Volcano`
+    );
+  }
+
+  private addFaultLines(): void {
+    if (!this.map) return;
+
+    const geojson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: FAULT_LINES.map((f) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [121.0, 14.5] },
+        properties: { name: f.name, region: f.region },
+      })),
+    };
+
+    this.map.addSource("fault-lines", { type: "geojson", data: geojson });
+
+    this.map.addLayer({
+      id: "fault-lines-circle",
+      type: "circle",
+      source: "fault-lines",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": 4,
+        "circle-color": "#ffa726",
+        "circle-stroke-width": 1,
+        "circle-stroke-color": "#fff3e0",
+        "circle-opacity": 0.7,
+      },
+    });
+
+    this.map.addLayer({
+      id: "fault-lines-label",
+      type: "symbol",
+      source: "fault-lines",
+      layout: {
+        "text-field": ["get", "name"],
+        "text-size": 9,
+        "text-offset": [0, 1.5],
+        "text-anchor": "top",
+        visibility: "none",
+      },
+      paint: {
+        "text-color": "#ffa726",
+        "text-halo-color": "#000",
+        "text-halo-width": 1,
+      },
+    });
+
+    this.addPopup("fault-lines-circle", (props) =>
+      `<strong>${props.name}</strong><br/>${props.region}`
+    );
+  }
+
+  private addSubmarineCables(): void {
+    if (!this.map) return;
+
+    const features = SUBMARINE_CABLES.flatMap((cable) =>
+      cable.landingPoints.map((lp) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [lp.lon, lp.lat] },
+        properties: { name: cable.name, landing: lp.name },
+      }))
+    );
+
+    const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+
+    this.map.addSource("submarine-cables", { type: "geojson", data: geojson });
+
+    this.map.addLayer({
+      id: "submarine-cables-circle",
+      type: "circle",
+      source: "submarine-cables",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": 5,
+        "circle-color": "#4fc3f7",
+        "circle-stroke-width": 1,
+        "circle-stroke-color": "#b3e5fc",
+        "circle-opacity": 0.8,
+      },
+    });
+
+    this.map.addLayer({
+      id: "submarine-cables-label",
+      type: "symbol",
+      source: "submarine-cables",
+      layout: {
+        "text-field": ["get", "name"],
+        "text-size": 9,
+        "text-offset": [0, 1.5],
+        "text-anchor": "top",
+        visibility: "none",
+      },
+      paint: {
+        "text-color": "#4fc3f7",
+        "text-halo-color": "#000",
+        "text-halo-width": 1,
+      },
+    });
+
+    this.addPopup("submarine-cables-circle", (props) =>
+      `<strong>${props.name}</strong><br/>Landing: ${props.landing}`
+    );
+  }
+
+  private addMajorPorts(): void {
+    if (!this.map) return;
+
+    const geojson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: MAJOR_PORTS.map((p) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [p.lon, p.lat] },
+        properties: { name: p.name },
+      })),
+    };
+
+    this.map.addSource("major-ports", { type: "geojson", data: geojson });
+
+    this.map.addLayer({
+      id: "major-ports-circle",
+      type: "circle",
+      source: "major-ports",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": 5,
+        "circle-color": "#4fc3f7",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#e1f5fe",
+        "circle-opacity": 0.8,
+      },
+    });
+
+    this.map.addLayer({
+      id: "major-ports-label",
+      type: "symbol",
+      source: "major-ports",
+      layout: {
+        "text-field": ["get", "name"],
+        "text-size": 9,
+        "text-offset": [0, 1.5],
+        "text-anchor": "top",
+        visibility: "none",
+      },
+      paint: {
+        "text-color": "#4fc3f7",
+        "text-halo-color": "#000",
+        "text-halo-width": 1,
+      },
+    });
+
+    this.addPopup("major-ports-circle", (props) =>
+      `<strong>${props.name}</strong><br/>Major Port`
     );
   }
 

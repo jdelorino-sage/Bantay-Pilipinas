@@ -18,10 +18,13 @@ export class InsightsPanel {
     el.className = "panel panel-insights";
     el.innerHTML = `
       <div class="panel-header">
-        <h2 class="panel-title">AI Insights</h2>
-        <span class="panel-badge">auto-refresh 60s</span>
+        <h2 class="panel-title">AI INSIGHTS</h2>
+        <span class="panel-badge live">LIVE</span>
       </div>
       <div class="panel-body insights-body">
+        <div class="insights-brief-label">
+          <span class="brief-dot"></span> PH BRIEF
+        </div>
         <p class="panel-placeholder">Loading AI briefing...</p>
       </div>
     `;
@@ -40,7 +43,10 @@ export class InsightsPanel {
       const newsRes = await this.api.getNews();
       const articles = newsRes.data;
       if (!articles || articles.length === 0) {
-        this.bodyEl.innerHTML = `<p class="panel-placeholder">No headlines available for AI analysis.</p>`;
+        this.bodyEl.innerHTML = `
+          <div class="insights-brief-label"><span class="brief-dot"></span> PH BRIEF</div>
+          <p class="panel-placeholder">No headlines available for AI analysis.</p>
+        `;
         return;
       }
 
@@ -48,7 +54,10 @@ export class InsightsPanel {
       const summaryRes = await this.api.getSummary(headlineIds);
       this.renderSummary(summaryRes.data);
     } catch {
-      this.bodyEl.innerHTML = `<p class="panel-placeholder">AI briefing will appear when backend is connected.</p>`;
+      this.bodyEl.innerHTML = `
+        <div class="insights-brief-label"><span class="brief-dot"></span> PH BRIEF</div>
+        <p class="panel-placeholder">AI briefing will appear when backend is connected.</p>
+      `;
     }
   }
 
@@ -79,6 +88,7 @@ export class InsightsPanel {
     }
 
     this.bodyEl.innerHTML = `
+      <div class="insights-brief-label"><span class="brief-dot"></span> PH BRIEF</div>
       <div class="insights-content">
         ${paragraphs}
         ${focalHtml}
