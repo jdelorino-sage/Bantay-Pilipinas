@@ -4,6 +4,7 @@ import { escapeHtml } from "../utils/sanitize";
 
 export class DisasterPanel {
   private api: ApiClient;
+  private el: HTMLElement | null = null;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -31,8 +32,13 @@ export class DisasterPanel {
         </div>
       </div>
     `;
+    this.el = el;
     this.load(el);
     return el;
+  }
+
+  refresh(): void {
+    if (this.el) this.load(this.el);
   }
 
   private async load(el: HTMLElement): Promise<void> {
@@ -70,8 +76,8 @@ export class DisasterPanel {
       } else {
         volList.innerHTML = '<p class="panel-placeholder">All quiet</p>';
       }
-    } catch {
-      // Backend not yet available
+    } catch (err) {
+      console.warn("[disaster] Failed to load:", err);
     }
   }
 }

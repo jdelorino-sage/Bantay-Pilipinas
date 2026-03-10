@@ -4,6 +4,7 @@ import { escapeHtml } from "../utils/sanitize";
 
 export class NewsPanel {
   private api: ApiClient;
+  private el: HTMLElement | null = null;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -21,14 +22,27 @@ export class NewsPanel {
         <p class="panel-placeholder">Loading news feeds...</p>
       </div>
     `;
+    this.el = el;
     this.load(el);
     return el;
+  }
+
+  refresh(): void {
+    if (this.el) this.load(this.el);
   }
 
   private async load(el: HTMLElement): Promise<void> {
     try {
       const response = await this.api.getNews();
       const body = el.querySelector(".panel-body")!;
+      const badge = el.querySelector(".panel-badge");
+      if (response.meta.freshness === "fallback" && badge) {
+        badge.textContent = "DEMO";
+        badge.classList.add("demo");
+      } else if (badge) {
+        badge.textContent = "LIVE";
+        badge.classList.remove("demo");
+      }
       if (response.data.length === 0) {
         body.innerHTML = '<p class="panel-placeholder">No articles yet</p>';
         return;
@@ -44,7 +58,8 @@ export class NewsPanel {
         `
         )
         .join("");
-    } catch {
+    } catch (err) {
+      console.warn("[news] Failed to load:", err);
       const body = el.querySelector(".panel-body");
       if (body) body.innerHTML = '<p class="panel-placeholder">Waiting for backend...</p>';
     }

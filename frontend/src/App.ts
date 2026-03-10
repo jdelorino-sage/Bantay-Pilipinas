@@ -7,10 +7,17 @@ import { MarketPanel } from "./components/MarketPanel";
 import { StabilityPanel } from "./components/StabilityPanel";
 import { InsightsPanel } from "./components/InsightsPanel";
 
+interface RefreshablePanel {
+  render(): HTMLElement;
+  refresh(): void;
+}
+
+const POLL_INTERVAL_MS = 60_000;
+
 export class App {
   private container: HTMLElement;
   private api: ApiClient;
-  private panels: Map<string, HTMLElement> = new Map();
+  private panelInstances: RefreshablePanel[] = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -55,21 +62,21 @@ export class App {
     const sidebar = document.getElementById("panel-sidebar");
     if (!sidebar) return;
 
-    const panelConfigs = [
-      { id: "news", component: NewsPanel },
-      { id: "wps", component: WPSPanel },
-      { id: "disaster", component: DisasterPanel },
-      { id: "market", component: MarketPanel },
-      { id: "stability", component: StabilityPanel },
-      { id: "insights", component: InsightsPanel },
+    const panels: RefreshablePanel[] = [
+      new NewsPanel(this.api),
+      new WPSPanel(this.api),
+      new DisasterPanel(this.api),
+      new MarketPanel(this.api),
+      new StabilityPanel(this.api),
+      new InsightsPanel(this.api),
     ];
 
-    for (const config of panelConfigs) {
-      const panel = new config.component(this.api);
+    for (const panel of panels) {
       const el = panel.render();
       sidebar.appendChild(el);
-      this.panels.set(config.id, el);
     }
+
+    this.panelInstances = panels;
   }
 
   private registerKeyboardShortcuts(): void {
@@ -82,6 +89,10 @@ export class App {
   }
 
   private startPolling(): void {
-    // TODO: set up polling intervals for each data type
+    setInterval(() => {
+      for (const panel of this.panelInstances) {
+        panel.refresh();
+      }
+    }, POLL_INTERVAL_MS);
   }
 }

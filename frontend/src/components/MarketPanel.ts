@@ -4,6 +4,7 @@ import { escapeHtml } from "../utils/sanitize";
 
 export class MarketPanel {
   private api: ApiClient;
+  private el: HTMLElement | null = null;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -22,8 +23,13 @@ export class MarketPanel {
         </div>
       </div>
     `;
+    this.el = el;
     this.load(el);
     return el;
+  }
+
+  refresh(): void {
+    if (this.el) this.load(this.el);
   }
 
   private async load(el: HTMLElement): Promise<void> {
@@ -40,13 +46,13 @@ export class MarketPanel {
           (d: EconomicDataPoint) => `
           <div class="market-item">
             <span class="market-label">${escapeHtml(d.indicator)}</span>
-            <span class="market-value">${d.currency === "PHP" ? "₱" : "$"}${d.value.toLocaleString()}</span>
+            <span class="market-value">${d.currency === "PHP" ? "\u20B1" : "$"}${d.value.toLocaleString()}</span>
           </div>
         `
         )
         .join("");
-    } catch {
-      // Backend not yet available
+    } catch (err) {
+      console.warn("[market] Failed to load:", err);
     }
   }
 }

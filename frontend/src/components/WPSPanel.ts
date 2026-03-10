@@ -2,6 +2,7 @@ import type { ApiClient } from "../services/api-client";
 
 export class WPSPanel {
   private api: ApiClient;
+  private el: HTMLElement | null = null;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -25,17 +26,44 @@ export class WPSPanel {
         </div>
       </div>
     `;
+    this.el = el;
     this.load(el);
     return el;
   }
 
+  refresh(): void {
+    if (this.el) this.load(this.el);
+  }
+
   private async load(el: HTMLElement): Promise<void> {
     try {
-      const tension = await this.api.getWPSTension();
+      const [tension, vessels] = await Promise.all([
+        this.api.getWPSTension(),
+        this.api.getWPSVessels(),
+      ]);
       const scoreEl = el.querySelector("#wps-tension-value");
-      if (scoreEl) scoreEl.textContent = tension.data.score.toFixed(1);
-    } catch {
-      // Backend not yet available
+      if (scoreEl) {
+        scoreEl.textContent = tension.data.score.toFixed(1);
+        scoreEl.className = `score-value level-${tension.data.level}`;
+      }
+      const vesselEl = el.querySelector("#wps-vessel-summary");
+      if (vesselEl) {
+        if (vessels.data.length === 0) {
+          vesselEl.innerHTML = '<p class="panel-placeholder">No vessels tracked</p>';
+        } else {
+          vesselEl.innerHTML = vessels.data
+            .map(
+              (v) => `
+              <div class="disaster-item">
+                ${v.name || "Unknown"} (${v.classification.toUpperCase()}) — ${v.nearFeature || "Open sea"}
+              </div>
+            `
+            )
+            .join("");
+        }
+      }
+    } catch (err) {
+      console.warn("[wps] Failed to load:", err);
     }
   }
 }

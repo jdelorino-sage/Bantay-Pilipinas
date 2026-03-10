@@ -18,7 +18,10 @@ export class InsightsPanel {
         <p class="panel-placeholder">AI briefing will appear here when backend is connected.</p>
       </div>
     `;
-    void this.api;
     return el;
+  }
+
+  refresh(): void {
+    void this.api;
   }
 }

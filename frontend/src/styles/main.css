@@ -122,6 +122,11 @@ body {
   background: var(--accent-yellow);
 }
 
+.panel-badge.demo {
+  background: var(--accent-orange);
+  color: #000;
+}
+
 .panel-body {
   padding: 10px 14px;
 }

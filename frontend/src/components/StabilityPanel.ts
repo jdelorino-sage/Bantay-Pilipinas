@@ -4,6 +4,7 @@ import { escapeHtml } from "../utils/sanitize";
 
 export class StabilityPanel {
   private api: ApiClient;
+  private el: HTMLElement | null = null;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -20,8 +21,13 @@ export class StabilityPanel {
         <p class="panel-placeholder">Loading regional scores...</p>
       </div>
     `;
+    this.el = el;
     this.load(el);
     return el;
+  }
+
+  refresh(): void {
+    if (this.el) this.load(this.el);
   }
 
   private async load(el: HTMLElement): Promise<void> {
@@ -50,8 +56,8 @@ export class StabilityPanel {
         </div>
         <div class="stability-regions">${regionHtml}</div>
       `;
-    } catch {
-      // Backend not yet available
+    } catch (err) {
+      console.warn("[stability] Failed to load:", err);
     }
   }
 }
