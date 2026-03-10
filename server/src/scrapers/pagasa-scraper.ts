@@ -5,8 +5,8 @@ import { TABLES } from "../db/schema.js";
 
 const breaker = new CircuitBreaker("pagasa", 3, 120_000);
 
-const PAGASA_TC_URL = "https://www.pagasa.dost.gov.ph/tropical-cyclone/severe-weather-bulletin";
-const PAGASA_WEATHER_URL = "https://www.pagasa.dost.gov.ph/weather";
+const PAGASA_TC_URL = "https://bagong.pagasa.dost.gov.ph/tropical-cyclone/severe-weather-bulletin";
+const PAGASA_WEATHER_URL = "https://bagong.pagasa.dost.gov.ph/weather";
 
 const weatherBreaker = new CircuitBreaker("pagasa-weather", 3, 120_000);
 

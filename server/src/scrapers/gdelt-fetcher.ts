@@ -1,4 +1,3 @@
-import { PH_BOUNDS } from "@bantay-pilipinas/shared";
 import { CircuitBreaker } from "../services/circuit-breaker.js";
 import { hasDatabaseUrl, query } from "../db/client.js";
 import { TABLES } from "../db/schema.js";
@@ -48,8 +47,6 @@ export async function fetchGDELT(): Promise<void> {
       console.log("[gdelt] No articles returned");
       return;
     }
-
-    void PH_BOUNDS;
 
     let stored = 0;
     for (const article of json.articles) {
