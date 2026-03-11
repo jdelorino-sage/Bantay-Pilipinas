@@ -51,7 +51,7 @@ function classifyVessel(mmsi: number, name?: string | null, speed?: number): Ves
     if (upperName.includes("PLAN") || upperName.includes("NAVY") || /^\d{3,4}$/.test(upperName.trim())) {
       return VesselClassification.PLAN;
     }
-    if (upperName.includes("PAFMM") || upperName.includes("MILITIA") || upperName.includes("YU")) {
+    if (upperName.includes("PAFMM") || upperName.includes("MILITIA")) {
       return VesselClassification.PAFMM;
     }
     return VesselClassification.Fishing;
