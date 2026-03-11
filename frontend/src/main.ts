@@ -8,3 +8,7 @@ const app = new App(document.getElementById("app")!);
 app.init();
 
 console.log(`${__APP_NAME__} v${__APP_VERSION__} initialized`);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}

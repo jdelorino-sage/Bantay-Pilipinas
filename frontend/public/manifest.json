@@ -1,0 +1,20 @@
+{
+  "name": "Bantay Pilipinas — Philippine Monitor",
+  "short_name": "Bantay Pilipinas",
+  "description": "Real-time Philippine intelligence dashboard — WPS monitoring, disaster tracking, economic intelligence",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1425",
+  "theme_color": "#0c1425",
+  "orientation": "any",
+  "categories": ["news", "government"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

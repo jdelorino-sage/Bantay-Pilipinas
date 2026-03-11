@@ -12,6 +12,8 @@ import { StabilityPanel } from "./components/StabilityPanel";
 import { InsightsPanel } from "./components/InsightsPanel";
 import { StrategicPosturePanel } from "./components/StrategicPosturePanel";
 import { RiskOverviewPanel } from "./components/RiskOverviewPanel";
+import { t, toggleLocale } from "./i18n";
+import { withErrorBoundary } from "./utils/error-boundary";
 
 interface RefreshablePanel {
   render(): HTMLElement;
@@ -64,12 +66,13 @@ export class App {
         </div>
         <div class="header-right">
           <span class="header-notification" id="header-notif-count">0</span>
-          <button class="header-btn" id="btn-search" title="Search (Cmd+K)">Search</button>
+          <button class="header-btn" id="btn-search" title="Search (Cmd+K)">${t("search")}</button>
+          <button class="header-btn header-lang-btn" id="btn-lang" title="Toggle language">${t("langToggle")}</button>
           <button class="header-btn" id="btn-settings" title="Settings">\u2699</button>
         </div>
       </header>
       <div class="situation-bar">
-        <span class="situation-label">PHILIPPINE SITUATION</span>
+        <span class="situation-label" id="situation-label">${t("situation")}</span>
         <span class="situation-datetime" id="situation-datetime"></span>
         <div class="situation-controls">
           <button class="view-toggle active" id="btn-2d">2D</button>
@@ -120,15 +123,15 @@ export class App {
     const rightPanels = document.getElementById("right-panels");
     if (!rightPanels) return;
 
-    const liveNews = new LiveNewsPanel(this.api);
-    const insightsPanel = new InsightsPanel(this.api);
-    const posturePanel = new StrategicPosturePanel(this.api);
-    const riskPanel = new RiskOverviewPanel(this.api);
-    const stabilityPanel = new StabilityPanel(this.api);
-    const newsPanel = new NewsPanel(this.api);
-    const wpsPanel = new WPSPanel(this.api);
-    const disasterPanel = new DisasterPanel(this.api);
-    const marketPanel = new MarketPanel(this.api);
+    const liveNews = withErrorBoundary(new LiveNewsPanel(this.api), "Live News");
+    const insightsPanel = withErrorBoundary(new InsightsPanel(this.api), "AI Insights");
+    const posturePanel = withErrorBoundary(new StrategicPosturePanel(this.api), "Strategic Posture");
+    const riskPanel = withErrorBoundary(new RiskOverviewPanel(this.api), "Risk Overview");
+    const stabilityPanel = withErrorBoundary(new StabilityPanel(this.api), "Regional Instability");
+    const newsPanel = withErrorBoundary(new NewsPanel(this.api), "National News");
+    const wpsPanel = withErrorBoundary(new WPSPanel(this.api), "West Philippine Sea");
+    const disasterPanel = withErrorBoundary(new DisasterPanel(this.api), "Disaster Monitor");
+    const marketPanel = withErrorBoundary(new MarketPanel(this.api), "Market Data");
 
     rightPanels.appendChild(liveNews.render());
 
@@ -192,6 +195,22 @@ export class App {
     document.addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
+      }
+    });
+
+    document.getElementById("btn-lang")?.addEventListener("click", () => {
+      toggleLocale();
+    });
+
+    document.addEventListener("locale-change", () => {
+      const langBtn = document.getElementById("btn-lang");
+      if (langBtn) langBtn.textContent = t("langToggle");
+
+      const sitLabel = document.getElementById("situation-label");
+      if (sitLabel) sitLabel.textContent = t("situation");
+
+      for (const panel of this.panelInstances) {
+        panel.refresh();
       }
     });
   }
