@@ -1,7 +1,7 @@
 const LEGEND_ITEMS = [
   { color: "#ef5350", shape: "circle", label: "High Alert" },
   { color: "#ffa726", shape: "circle", label: "Elevated" },
-  { color: "#ffa726", shape: "circle", label: "Monitoring" },
+  { color: "#66bb6a", shape: "circle", label: "Monitoring" },
   { color: "#4fc3f7", shape: "triangle", label: "Base" },
   { color: "#ef5350", shape: "triangle", label: "Volcano" },
   { color: "#4fc3f7", shape: "square", label: "Port" },

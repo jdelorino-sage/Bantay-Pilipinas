@@ -49,8 +49,8 @@ async function getNewsVelocityForCategory(category: string, hours = 6): Promise<
   try {
     const result = await query(
       `SELECT COUNT(*) as count FROM ${TABLES.NEWS_ARTICLES}
-       WHERE category = $1 AND fetched_at > NOW() - INTERVAL '${hours} hours'`,
-      [category]
+       WHERE category = $1 AND fetched_at > NOW() - INTERVAL '1 hour' * $2`,
+      [category, hours]
     );
     const count = parseInt(result.rows[0]?.count || "0", 10);
     return Math.min(count * 5, 100);

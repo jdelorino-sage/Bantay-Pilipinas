@@ -13,7 +13,7 @@ const LAYER_GROUPS: Record<string, LayerGroup> = {
   "wps-features": { sourceId: "wps-features", layerIds: ["wps-features-circle", "wps-features-label"] },
   "edca-sites": { sourceId: "edca-sites", layerIds: ["edca-sites-circle", "edca-sites-label"] },
   "volcanoes": { sourceId: "volcanoes", layerIds: ["volcanoes-circle", "volcanoes-label"] },
-  "fault-lines": { sourceId: "fault-lines", layerIds: ["fault-lines-circle", "fault-lines-label"] },
+  "fault-lines": { sourceId: "fault-lines", layerIds: ["fault-lines-line", "fault-lines-label"] },
   "submarine-cables": { sourceId: "submarine-cables", layerIds: ["submarine-cables-circle", "submarine-cables-label"] },
   "major-ports": { sourceId: "major-ports", layerIds: ["major-ports-circle", "major-ports-label"] },
 };
@@ -228,7 +228,7 @@ export class DeckGLMap {
       type: "FeatureCollection",
       features: FAULT_LINES.map((f) => ({
         type: "Feature" as const,
-        geometry: { type: "Point" as const, coordinates: [121.0, 14.5] },
+        geometry: { type: "LineString" as const, coordinates: f.path },
         properties: { name: f.name, region: f.region },
       })),
     };
@@ -236,16 +236,15 @@ export class DeckGLMap {
     this.map.addSource("fault-lines", { type: "geojson", data: geojson });
 
     this.map.addLayer({
-      id: "fault-lines-circle",
-      type: "circle",
+      id: "fault-lines-line",
+      type: "line",
       source: "fault-lines",
       layout: { visibility: "none" },
       paint: {
-        "circle-radius": 4,
-        "circle-color": "#ffa726",
-        "circle-stroke-width": 1,
-        "circle-stroke-color": "#fff3e0",
-        "circle-opacity": 0.7,
+        "line-color": "#ffa726",
+        "line-width": 2,
+        "line-opacity": 0.7,
+        "line-dasharray": [4, 2],
       },
     });
 

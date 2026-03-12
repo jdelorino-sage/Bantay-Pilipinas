@@ -58,10 +58,14 @@ export const ACTIVE_VOLCANOES: VolcanoEntry[] = [
 ];
 
 export const FAULT_LINES = [
-  { id: "valley-fault", name: "Valley Fault System", region: "Metro Manila / Rizal / Laguna / Cavite / Bulacan" },
-  { id: "philippine-fault", name: "Philippine Fault Zone", region: "Luzon to Mindanao (1200km)" },
-  { id: "manila-trench", name: "Manila Trench", region: "West Luzon offshore" },
-  { id: "philippine-trench", name: "Philippine Trench", region: "East Mindanao offshore (10,540m)" },
+  { id: "valley-fault", name: "Valley Fault System", region: "Metro Manila / Rizal / Laguna / Cavite / Bulacan",
+    path: [[121.10, 14.75], [121.08, 14.60], [121.05, 14.45], [121.03, 14.30], [121.00, 14.15]] },
+  { id: "philippine-fault", name: "Philippine Fault Zone", region: "Luzon to Mindanao (1200km)",
+    path: [[122.60, 18.50], [122.00, 16.50], [122.50, 14.00], [124.00, 11.50], [125.50, 8.50], [126.00, 7.00]] },
+  { id: "manila-trench", name: "Manila Trench", region: "West Luzon offshore",
+    path: [[119.50, 20.00], [119.80, 18.00], [120.20, 16.00], [120.50, 14.50], [120.00, 13.00]] },
+  { id: "philippine-trench", name: "Philippine Trench", region: "East Mindanao offshore (10,540m)",
+    path: [[127.00, 10.50], [126.50, 9.00], [126.80, 7.50], [127.50, 6.00], [127.00, 5.50]] },
 ];
 
 export const REGION_PRESETS = {

@@ -1,43 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { VesselClassification } from "../shared/constants";
-
-function classifyVessel(mmsi: number, name?: string | null, speed?: number): VesselClassification {
-  const mid = Math.floor(mmsi / 1_000_000);
-  const upperName = (name || "").toUpperCase();
-
-  if (mid === 412 || mid === 413 || mid === 414) {
-    if (upperName.includes("HAIJING") || upperName.includes("CCG") || upperName.includes("COAST GUARD")) {
-      return VesselClassification.CCG;
-    }
-    if (upperName.includes("PLAN") || upperName.includes("NAVY") || /^\d{3,4}$/.test(upperName.trim())) {
-      return VesselClassification.PLAN;
-    }
-    if (upperName.includes("PAFMM") || upperName.includes("MILITIA")) {
-      return VesselClassification.PAFMM;
-    }
-    return VesselClassification.Fishing;
-  }
-
-  if (mid === 548) {
-    if (upperName.includes("BRP") || upperName.includes("NAVY") || upperName.includes("AFP")) {
-      return VesselClassification.PHNavy;
-    }
-    if (upperName.includes("PCG") || upperName.includes("COAST GUARD")) {
-      return VesselClassification.PHCoastGuard;
-    }
-    return VesselClassification.Fishing;
-  }
-
-  if (mid === 338 || mid === 366 || mid === 367 || mid === 368 || mid === 369) {
-    if (upperName.includes("USS") || upperName.includes("USNS") || upperName.includes("NAVY")) {
-      return VesselClassification.USNavy;
-    }
-    return VesselClassification.Commercial;
-  }
-
-  if ((speed ?? 0) > 5) return VesselClassification.Commercial;
-  return VesselClassification.Unknown;
-}
+import { classifyVessel } from "../server/src/services/ais-websocket";
 
 describe("classifyVessel", () => {
   describe("Chinese vessels (MID 412-414)", () => {

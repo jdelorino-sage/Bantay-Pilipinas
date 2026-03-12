@@ -1,19 +1,5 @@
 import { describe, it, expect } from "vitest";
-
-function categorizeGDELT(title: string): string {
-  const lower = title.toLowerCase();
-  if (lower.includes("wps") || lower.includes("south china sea") || lower.includes("spratlys") || lower.includes("scarborough"))
-    return "wps-maritime";
-  if (lower.includes("typhoon") || lower.includes("earthquake") || lower.includes("flood") || lower.includes("volcano"))
-    return "disaster";
-  if (lower.includes("military") || lower.includes("armed forces") || lower.includes("defense"))
-    return "defense";
-  if (lower.includes("economy") || lower.includes("peso") || lower.includes("inflation") || lower.includes("gdp"))
-    return "economy";
-  if (lower.includes("ofw") || lower.includes("remittance") || lower.includes("overseas"))
-    return "ofw-diaspora";
-  return "national-politics";
-}
+import { categorizeGDELT } from "../server/src/scrapers/gdelt-fetcher";
 
 describe("categorizeGDELT", () => {
   it("categorizes WPS/maritime articles", () => {

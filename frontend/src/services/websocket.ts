@@ -19,9 +19,13 @@ export class AISWebSocket {
     this.ws = new WebSocket(`${this.url}/ws/ais`);
 
     this.ws.onmessage = (event) => {
-      const vessel: TrackedVessel = JSON.parse(event.data);
-      for (const handler of this.handlers) {
-        handler(vessel);
+      try {
+        const vessel: TrackedVessel = JSON.parse(event.data);
+        for (const handler of this.handlers) {
+          handler(vessel);
+        }
+      } catch {
+        console.warn("[ais-ws] Failed to parse vessel data");
       }
     };
 

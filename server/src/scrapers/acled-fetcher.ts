@@ -75,7 +75,7 @@ export async function fetchACLED(): Promise<void> {
         ).catch((err: unknown) => console.error("[acled] DB insert failed:", (err as Error).message));
       } else {
         memoryEvents.push(event);
-        if (memoryEvents.length > 500) memoryEvents.shift();
+        while (memoryEvents.length > 500) memoryEvents.shift();
       }
       stored++;
     }

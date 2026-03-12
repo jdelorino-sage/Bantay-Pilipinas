@@ -40,7 +40,7 @@ interface AISStreamMessage {
 
 type VesselHandler = (vessel: AISMessage) => void;
 
-function classifyVessel(mmsi: number, name?: string | null, speed?: number): VesselClassification {
+export function classifyVessel(mmsi: number, name?: string | null, speed?: number): VesselClassification {
   const mid = Math.floor(mmsi / 1_000_000);
   const upperName = (name || "").toUpperCase();
 

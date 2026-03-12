@@ -134,7 +134,7 @@ export function getGDELTArticleCount(): number {
   return memoryStore.size;
 }
 
-function categorizeGDELT(title: string): string {
+export function categorizeGDELT(title: string): string {
   const lower = title.toLowerCase();
   if (lower.includes("wps") || lower.includes("south china sea") || lower.includes("spratlys") || lower.includes("scarborough"))
     return "wps-maritime";
