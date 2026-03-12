@@ -53,6 +53,39 @@ function extractWindSpeed(text: string): number | null {
   return null;
 }
 
+function extractForecastTrack(text: string): Array<{ lat: number; lon: number; timestamp: string; windKph: number | null }> {
+  const track: Array<{ lat: number; lon: number; timestamp: string; windKph: number | null }> = [];
+  const forecastPattern = /(?:(?:by|at|on)\s+)?(\d{1,2}\s+\w+\s+\d{4}|\d{1,2}:\d{2}\s*(?:AM|PM)\s+(?:tomorrow|today|\w+)).*?([\d.]+)\s*°?\s*N[,\s]+([\d.]+)\s*°?\s*E.*?(?:([\d]+)\s*(?:kph|km\/h))?/gi;
+  let match: RegExpExecArray | null;
+  while ((match = forecastPattern.exec(text)) !== null) {
+    const lat = parseFloat(match[2]);
+    const lon = parseFloat(match[3]);
+    if (lat < 3 || lat > 25 || lon < 110 || lon > 140) continue;
+    const windKph = match[4] ? parseInt(match[4], 10) : null;
+    const dateStr = match[1].trim();
+    let timestamp: string;
+    try {
+      const parsed = new Date(dateStr);
+      timestamp = isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+    } catch {
+      timestamp = new Date().toISOString();
+    }
+    track.push({ lat, lon, timestamp, windKph });
+  }
+
+  const hourPattern = /(?:(\d{2,4})\s*(?:H|hrs?|hours?))[^.]*?([\d.]+)\s*°?\s*N[,\s]+([\d.]+)\s*°?\s*E/gi;
+  while ((match = hourPattern.exec(text)) !== null) {
+    const lat = parseFloat(match[2]);
+    const lon = parseFloat(match[3]);
+    if (lat < 3 || lat > 25 || lon < 110 || lon > 140) continue;
+    const hoursAhead = parseInt(match[1], 10);
+    const ts = new Date(Date.now() + hoursAhead * 3600_000).toISOString();
+    track.push({ lat, lon, timestamp: ts, windKph: null });
+  }
+
+  return track;
+}
+
 function computeImpactScore(windKph: number | null): number {
   if (!windKph) return 10;
   if (windKph >= 220) return 95;
@@ -151,6 +184,8 @@ export async function scrapePAGASA(): Promise<number> {
       const windKph = extractWindSpeed(bulletinText);
       const id = localName.toLowerCase();
 
+      const forecastTrack = extractForecastTrack(bulletinText);
+
       const typhoon: StoredTyphoon = {
         id,
         internationalName,
@@ -159,7 +194,7 @@ export async function scrapePAGASA(): Promise<number> {
         lon: coords?.lon || 0,
         maxWindKph: windKph,
         signalAreas: {},
-        forecastTrack: [],
+        forecastTrack,
         impactScore: computeImpactScore(windKph),
         isActive: true,
         updatedAt: new Date().toISOString(),
@@ -185,10 +220,11 @@ export async function scrapePAGASA(): Promise<number> {
              lat = EXCLUDED.lat, lon = EXCLUDED.lon,
              max_wind_kph = EXCLUDED.max_wind_kph,
              signal_areas = EXCLUDED.signal_areas,
+             forecast_track = EXCLUDED.forecast_track,
              impact_score = EXCLUDED.impact_score,
              is_active = true, updated_at = NOW()`,
           [id, internationalName, localName, typhoon.lat, typhoon.lon, windKph,
-           JSON.stringify(typhoon.signalAreas), JSON.stringify(typhoon.forecastTrack),
+           JSON.stringify(typhoon.signalAreas), JSON.stringify(forecastTrack),
            typhoon.impactScore, true]
         ).catch((err: unknown) => console.error("[pagasa] DB upsert failed:", (err as Error).message));
       } else {

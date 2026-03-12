@@ -90,6 +90,19 @@ export async function scrapePHIVOLCS(): Promise<number> {
       if (isNaN(parsedDate.getTime())) return;
       const occurredAt = parsedDate.toISOString();
 
+      let intensity: number | null = null;
+      if (cells.length > 6) {
+        const intText = $(cells[6]).text().trim();
+        const intMatch = intText.match(/(?:Intensity\s+)?(\w+)/i);
+        if (intMatch) {
+          const romanMap: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 };
+          intensity = romanMap[intMatch[1].toUpperCase()] || parseInt(intMatch[1], 10) || null;
+        }
+      }
+
+      const rowText = $(row).text().toLowerCase();
+      const tsunamiAdvisory = rowText.includes("tsunami") && !rowText.includes("no tsunami");
+
       const eq: StoredEarthquake = {
         id: nextEqId++,
         magnitude,
@@ -97,8 +110,8 @@ export async function scrapePHIVOLCS(): Promise<number> {
         lat,
         lon,
         locationText: locationText || null,
-        intensity: null,
-        tsunamiAdvisory: false,
+        intensity,
+        tsunamiAdvisory,
         source: "phivolcs",
         occurredAt,
       };
