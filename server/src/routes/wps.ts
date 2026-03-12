@@ -102,29 +102,45 @@ async function getTension(): Promise<WPSTensionScore> {
 
 export function registerWPSRoutes(app: FastifyInstance): void {
   app.get("/api/wps", async () => {
-    const vessels = await getVessels();
-    const response: ApiResponse<TrackedVessel[]> = {
-      data: vessels,
-      meta: { freshness: vessels.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
-    };
-    return response;
+    try {
+      const vessels = await getVessels();
+      const response: ApiResponse<TrackedVessel[]> = {
+        data: vessels,
+        meta: { freshness: vessels.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.error("[wps] Vessels handler error:", (err as Error).message);
+      return { data: [], meta: { freshness: "error", timestamp: new Date().toISOString() } };
+    }
   });
 
   app.get("/api/wps/incidents", async () => {
-    const incidents = await getIncidents();
-    const response: ApiResponse<WPSIncident[]> = {
-      data: incidents,
-      meta: { freshness: incidents.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
-    };
-    return response;
+    try {
+      const incidents = await getIncidents();
+      const response: ApiResponse<WPSIncident[]> = {
+        data: incidents,
+        meta: { freshness: incidents.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.error("[wps] Incidents handler error:", (err as Error).message);
+      return { data: [], meta: { freshness: "error", timestamp: new Date().toISOString() } };
+    }
   });
 
   app.get("/api/wps/tension", async () => {
-    const tension = await getTension();
-    const response: ApiResponse<WPSTensionScore> = {
-      data: tension,
-      meta: { freshness: "live", timestamp: new Date().toISOString() },
-    };
-    return response;
+    try {
+      const tension = await getTension();
+      const response: ApiResponse<WPSTensionScore> = {
+        data: tension,
+        meta: { freshness: "live", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.error("[wps] Tension handler error:", (err as Error).message);
+      const fallback = await computeWPSTension(0, 0, 0, 0);
+      return { data: fallback, meta: { freshness: "error", timestamp: new Date().toISOString() } };
+    }
   });
 }

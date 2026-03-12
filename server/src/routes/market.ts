@@ -34,11 +34,16 @@ async function getMarketData(): Promise<EconomicDataPoint[]> {
 
 export function registerMarketRoutes(app: FastifyInstance): void {
   app.get("/api/market", async () => {
-    const data = await getMarketData();
-    const response: ApiResponse<EconomicDataPoint[]> = {
-      data,
-      meta: { freshness: data.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
-    };
-    return response;
+    try {
+      const data = await getMarketData();
+      const response: ApiResponse<EconomicDataPoint[]> = {
+        data,
+        meta: { freshness: data.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.error("[market] Handler error:", (err as Error).message);
+      return { data: [], meta: { freshness: "error", timestamp: new Date().toISOString() } };
+    }
   });
 }

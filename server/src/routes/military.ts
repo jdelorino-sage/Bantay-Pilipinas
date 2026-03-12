@@ -92,24 +92,29 @@ async function fetchFromOpenSky(): Promise<MilitaryFlight[]> {
 
 export function registerMilitaryRoutes(app: FastifyInstance): void {
   app.get("/api/military", async () => {
-    const cached = cache.get("military:flights");
-    if (cached) {
+    try {
+      const cached = cache.get("military:flights");
+      if (cached) {
+        const response: ApiResponse<MilitaryFlight[]> = {
+          data: cached,
+          meta: { freshness: "cached", timestamp: new Date().toISOString() },
+        };
+        return response;
+      }
+
+      const flights = await fetchFromOpenSky();
+      if (flights.length > 0) {
+        cache.set("military:flights", flights, CACHE_TTL);
+      }
+
       const response: ApiResponse<MilitaryFlight[]> = {
-        data: cached,
-        meta: { freshness: "cached", timestamp: new Date().toISOString() },
+        data: flights,
+        meta: { freshness: flights.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
       };
       return response;
+    } catch (err) {
+      console.error("[military] Handler error:", (err as Error).message);
+      return { data: [], meta: { freshness: "error", timestamp: new Date().toISOString() } };
     }
-
-    const flights = await fetchFromOpenSky();
-    if (flights.length > 0) {
-      cache.set("military:flights", flights, CACHE_TTL);
-    }
-
-    const response: ApiResponse<MilitaryFlight[]> = {
-      data: flights,
-      meta: { freshness: flights.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
-    };
-    return response;
   });
 }

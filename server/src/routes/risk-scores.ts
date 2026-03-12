@@ -96,23 +96,36 @@ async function getScoreHistory(): Promise<RegionalStabilityScore[]> {
 
 export function registerRiskScoreRoutes(app: FastifyInstance): void {
   app.get("/api/risk-scores", async () => {
-    const [regions, wpsTension] = await Promise.all([
-      getLatestRegionScores(),
-      getLatestWPSTension(),
-    ]);
-    const response: ApiResponse<{ regions: RegionalStabilityScore[]; wpsTension: WPSTensionScore }> = {
-      data: { regions, wpsTension },
-      meta: { freshness: "live", timestamp: new Date().toISOString() },
-    };
-    return response;
+    try {
+      const [regions, wpsTension] = await Promise.all([
+        getLatestRegionScores(),
+        getLatestWPSTension(),
+      ]);
+      const response: ApiResponse<{ regions: RegionalStabilityScore[]; wpsTension: WPSTensionScore }> = {
+        data: { regions, wpsTension },
+        meta: { freshness: "live", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.error("[risk-scores] Handler error:", (err as Error).message);
+      return {
+        data: { regions: [], wpsTension: await computeWPSTension(0, 0, 0, 0) },
+        meta: { freshness: "error", timestamp: new Date().toISOString() },
+      };
+    }
   });
 
   app.get("/api/risk-scores/history", async () => {
-    const history = await getScoreHistory();
-    const response: ApiResponse<RegionalStabilityScore[]> = {
-      data: history,
-      meta: { freshness: history.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
-    };
-    return response;
+    try {
+      const history = await getScoreHistory();
+      const response: ApiResponse<RegionalStabilityScore[]> = {
+        data: history,
+        meta: { freshness: history.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.error("[risk-scores] History handler error:", (err as Error).message);
+      return { data: [], meta: { freshness: "error", timestamp: new Date().toISOString() } };
+    }
   });
 }

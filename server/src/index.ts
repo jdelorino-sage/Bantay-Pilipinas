@@ -33,13 +33,45 @@ async function main(): Promise<void> {
     staticOrigins.push("http://localhost:5173");
   }
 
+  function isAllowedOrigin(origin: string): boolean {
+    return staticOrigins.includes(origin) || origin.endsWith(".netlify.app") || origin.endsWith(".netlify.live");
+  }
+
   await app.register(cors, {
     origin: (origin, cb) => {
       if (!origin) return cb(null, true);
-      if (staticOrigins.includes(origin)) return cb(null, true);
-      if (origin.endsWith(".netlify.app") || origin.endsWith(".netlify.live")) return cb(null, true);
+      if (isAllowedOrigin(origin)) return cb(null, true);
       cb(null, false);
     },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false,
+  });
+
+  app.setErrorHandler((error: Error & { statusCode?: number }, request, reply) => {
+    const origin = request.headers.origin;
+    if (origin && isAllowedOrigin(origin)) {
+      void reply.header("Access-Control-Allow-Origin", origin);
+    }
+    app.log.error(error);
+    const statusCode = error.statusCode ?? 500;
+    void reply.status(statusCode).send({
+      data: null,
+      meta: { freshness: "error", timestamp: new Date().toISOString() },
+      error: process.env.NODE_ENV === "production" ? "Internal server error" : error.message,
+    });
+  });
+
+  app.setNotFoundHandler((request, reply) => {
+    const origin = request.headers.origin;
+    if (origin && isAllowedOrigin(origin)) {
+      void reply.header("Access-Control-Allow-Origin", origin);
+    }
+    void reply.status(404).send({
+      data: null,
+      meta: { freshness: "error", timestamp: new Date().toISOString() },
+      error: "Not found",
+    });
   });
 
   await app.register(rateLimit, {
