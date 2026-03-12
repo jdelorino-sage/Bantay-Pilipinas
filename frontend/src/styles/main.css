@@ -921,6 +921,67 @@ body {
   padding-left: 6px;
 }
 
+.disaster-time {
+  color: var(--text-muted);
+  font-size: 10px;
+  float: right;
+}
+
+.eq-depth {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.eq-strong {
+  border-left: 2px solid var(--accent-red);
+  padding-left: 6px;
+}
+
+.eq-moderate {
+  border-left: 2px solid var(--accent-orange);
+  padding-left: 6px;
+}
+
+.eq-light {
+  border-left: 2px solid var(--accent-green);
+  padding-left: 6px;
+}
+
+.tsunami-badge {
+  background: var(--accent-red);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.alert-severe {
+  border-left: 2px solid var(--accent-red);
+  padding-left: 6px;
+}
+
+.alert-high {
+  border-left: 2px solid var(--accent-orange);
+  padding-left: 6px;
+}
+
+.alert-elevated {
+  border-left: 2px solid var(--accent-yellow);
+  padding-left: 6px;
+}
+
+.alert-low {
+  border-left: 2px solid var(--accent-green);
+  padding-left: 6px;
+}
+
+.alert-normal {
+  border-left: 2px solid var(--text-muted);
+  padding-left: 6px;
+}
+
 /* ===== MARKET ===== */
 
 .market-item {

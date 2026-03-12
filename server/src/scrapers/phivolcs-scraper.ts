@@ -32,6 +32,21 @@ interface StoredVolcano {
   lastBulletinAt: string | null;
 }
 
+const KNOWN_VOLCANO_COORDS: Record<string, { lat: number; lon: number }> = {
+  mayon: { lat: 13.257, lon: 123.685 },
+  taal: { lat: 14.002, lon: 120.993 },
+  pinatubo: { lat: 15.13, lon: 120.35 },
+  kanlaon: { lat: 10.412, lon: 123.132 },
+  bulusan: { lat: 12.77, lon: 124.05 },
+  "hibok-hibok": { lat: 9.203, lon: 124.673 },
+  "smith-volcano": { lat: 19.54, lon: 121.917 },
+  "mount-parker": { lat: 6.1, lon: 124.89 },
+  "mount-matutum": { lat: 6.37, lon: 125.07 },
+  "mount-apo": { lat: 7.0, lon: 125.27 },
+  "mount-banahaw": { lat: 14.07, lon: 121.48 },
+  musuan: { lat: 7.877, lon: 125.068 },
+};
+
 const memoryEarthquakes: StoredEarthquake[] = [];
 const memoryVolcanoes = new Map<string, StoredVolcano>();
 let nextEqId = 1;
@@ -161,8 +176,9 @@ export async function scrapeVolcanoStatus(): Promise<number> {
           existing.alertDescription = description || null;
           existing.lastBulletinAt = new Date().toISOString();
         } else {
+          const coords = KNOWN_VOLCANO_COORDS[id] || { lat: 0, lon: 0 };
           memoryVolcanoes.set(id, {
-            id, name, lat: 0, lon: 0,
+            id, name, lat: coords.lat, lon: coords.lon,
             alertLevel, alertDescription: description || null,
             observations: [], lastBulletinAt: new Date().toISOString(),
           });
@@ -177,6 +193,77 @@ export async function scrapeVolcanoStatus(): Promise<number> {
   } catch (err) {
     volcanoBreaker.recordFailure();
     console.error("[phivolcs] Volcano status scrape failed:", (err as Error).message);
+    return 0;
+  }
+}
+
+const USGS_PH_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=4&maxlatitude=22&minlongitude=115&maxlongitude=130&limit=20&orderby=time";
+const usgsBreaker = new CircuitBreaker("usgs-eq", 3, 300_000);
+
+export async function fetchUSGSEarthquakes(): Promise<number> {
+  if (!usgsBreaker.canExecute()) return 0;
+
+  try {
+    const response = await fetch(USGS_PH_URL, {
+      headers: { "User-Agent": "BantayPilipinas/1.0 (Philippine Monitor)" },
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json() as {
+      features: Array<{
+        properties: { mag: number; place: string; time: number; tsunami: number };
+        geometry: { coordinates: [number, number, number] };
+      }>;
+    };
+
+    let count = 0;
+    for (const feature of data.features) {
+      const { mag, place, time, tsunami } = feature.properties;
+      const [lon, lat, depthKm] = feature.geometry.coordinates;
+
+      if (!mag || !lat || !lon) continue;
+
+      const eq: StoredEarthquake = {
+        id: nextEqId++,
+        magnitude: mag,
+        depthKm: depthKm || null,
+        lat,
+        lon,
+        locationText: place || null,
+        intensity: null,
+        tsunamiAdvisory: tsunami === 1,
+        source: "usgs",
+        occurredAt: new Date(time).toISOString(),
+      };
+
+      if (hasDatabaseUrl()) {
+        await query(
+          `INSERT INTO ${TABLES.EARTHQUAKES}
+           (magnitude, depth_km, lat, lon, location_text, intensity, tsunami_advisory, source, occurred_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT DO NOTHING`,
+          [eq.magnitude, eq.depthKm, eq.lat, eq.lon, eq.locationText, eq.intensity, eq.tsunamiAdvisory, eq.source, eq.occurredAt]
+        ).catch((err: unknown) => console.error("[usgs] DB insert failed:", (err as Error).message));
+      } else {
+        const exists = memoryEarthquakes.some(
+          (e) => e.magnitude === eq.magnitude && e.occurredAt === eq.occurredAt && Math.abs(e.lat - eq.lat) < 0.01
+        );
+        if (!exists) {
+          memoryEarthquakes.unshift(eq);
+          if (memoryEarthquakes.length > 200) memoryEarthquakes.pop();
+        }
+      }
+      count++;
+    }
+
+    usgsBreaker.recordSuccess();
+    console.log(`[usgs] Fetched ${count} PH-region earthquakes`);
+    return count;
+  } catch (err) {
+    usgsBreaker.recordFailure();
+    console.error("[usgs] Earthquake fetch failed:", (err as Error).message);
     return 0;
   }
 }

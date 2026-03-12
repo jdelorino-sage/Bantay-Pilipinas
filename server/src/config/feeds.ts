@@ -11,6 +11,10 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "pna", name: "Philippine News Agency", url: "https://www.pna.gov.ph/rss.xml", tier: 1, category: "national-politics" },
   { id: "pcg", name: "Philippine Coast Guard", url: "https://www.coastguard.gov.ph/index.php/11-news?format=feed", tier: 1, category: "wps-maritime" },
   { id: "dswd", name: "DSWD", url: "https://www.dswd.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "pagasa-rss", name: "PAGASA Weather", url: "https://www.pagasa.dost.gov.ph/rss.xml", tier: 1, category: "disaster" },
+  { id: "phivolcs-rss", name: "PHIVOLCS Earthquake", url: "https://earthquake.phivolcs.dost.gov.ph/rss/feed", tier: 1, category: "disaster" },
+  { id: "ndrrmc", name: "NDRRMC Updates", url: "https://ndrrmc.gov.ph/rss.xml", tier: 1, category: "disaster" },
+  { id: "doh", name: "Department of Health", url: "https://doh.gov.ph/feed", tier: 1, category: "disaster" },
 
   // Tier 2 — Major National Outlets
   { id: "inquirer", name: "Inquirer.net", url: "https://newsinfo.inquirer.net/feed", tier: 2, category: "national-politics" },

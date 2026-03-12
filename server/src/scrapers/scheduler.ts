@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { runAggregator } from "./rss-aggregator.js";
-import { scrapePHIVOLCS, scrapeVolcanoStatus } from "./phivolcs-scraper.js";
+import { scrapePHIVOLCS, scrapeVolcanoStatus, fetchUSGSEarthquakes } from "./phivolcs-scraper.js";
 import { scrapePAGASA, scrapeWeatherAdvisories } from "./pagasa-scraper.js";
 import { scrapeBSP } from "./bsp-scraper.js";
 import { fetchACLED } from "./acled-fetcher.js";
@@ -54,19 +54,18 @@ export function startScheduler(): void {
     runWithStatus("rss", () => runAggregator(PH_FEEDS));
   });
 
-  // PAGASA typhoon bulletins + weather advisories — every 30 minutes
+  // PAGASA typhoon bulletins — every 30 minutes
   cron.schedule("*/30 * * * *", () => {
-    runWithStatus("pagasa", async () => {
-      await scrapePAGASA();
-      await scrapeWeatherAdvisories();
-    });
+    runWithStatus("pagasa", () => scrapePAGASA());
+    runWithStatus("weather", () => scrapeWeatherAdvisories());
   });
 
-  // PHIVOLCS earthquakes — every 5 minutes
+  // PHIVOLCS earthquakes + USGS fallback — every 5 minutes
   cron.schedule("*/5 * * * *", () => {
     runWithStatus("phivolcs", async () => {
       await scrapePHIVOLCS();
       await scrapeVolcanoStatus();
+      await fetchUSGSEarthquakes();
     });
   });
 
@@ -99,11 +98,12 @@ export function startScheduler(): void {
     runWithStatus("phivolcs", async () => {
       await scrapePHIVOLCS();
       await scrapeVolcanoStatus();
+      await fetchUSGSEarthquakes();
     });
     runWithStatus("pagasa", async () => {
       await scrapePAGASA();
-      await scrapeWeatherAdvisories();
     });
+    runWithStatus("weather", () => scrapeWeatherAdvisories());
     runWithStatus("bsp", () => scrapeBSP());
     runWithStatus("gdelt", () => fetchGDELT());
     runWithStatus("scores", () => runScoreComputation());
