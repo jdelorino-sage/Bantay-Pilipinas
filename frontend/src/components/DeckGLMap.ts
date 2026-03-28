@@ -19,8 +19,8 @@ const LAYER_GROUPS: Record<string, LayerGroup> = {
   "fault-lines": { sourceId: "fault-lines", layerIds: ["fault-lines-line", "fault-lines-label"] },
   "submarine-cables": { sourceId: "submarine-cables", layerIds: ["submarine-cables-circle", "submarine-cables-label"] },
   "major-ports": { sourceId: "major-ports", layerIds: ["major-ports-circle", "major-ports-label"] },
-  "military-activity": { sourceId: "military-activity", layerIds: ["military-activity-circle", "military-activity-label"] },
-  "ship-traffic": { sourceId: "ship-traffic", layerIds: ["ship-traffic-circle", "ship-traffic-label"] },
+  "military-activity": { sourceId: "military-activity", layerIds: ["military-activity-glow", "military-activity-circle", "military-activity-label"] },
+  "ship-traffic": { sourceId: "ship-traffic", layerIds: ["ship-traffic-glow", "ship-traffic-circle", "ship-traffic-label"] },
   "typhoon-tracks": { sourceId: "typhoon-tracks", layerIds: ["typhoon-tracks-line", "typhoon-tracks-point"] },
   "weather-systems": { sourceId: "weather-systems", layerIds: ["weather-systems-circle", "weather-systems-label"] },
   "intel-hotspots": { sourceId: "intel-hotspots", layerIds: ["intel-hotspots-circle", "intel-hotspots-label"] },
@@ -418,42 +418,51 @@ export class DeckGLMap {
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("military-activity", { type: "geojson", data: emptyGeoJSON });
 
+    // Outer glow ring
     this.map.addLayer({
-      id: "military-activity-circle",
-      type: "symbol",
+      id: "military-activity-glow",
+      type: "circle",
       source: "military-activity",
-      layout: {
-        "text-field": "\u2708\uFE0E",
-        "text-size": 22,
-        "text-allow-overlap": true,
-        "text-ignore-placement": true,
-        "text-rotate": ["get", "heading"],
-        "text-font": ["Open Sans Bold"],
-      },
       paint: {
-        "text-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
-        "text-halo-color": "#000",
-        "text-halo-width": 2,
-        "text-opacity": 0.95,
+        "circle-radius": 12,
+        "circle-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
+        "circle-opacity": 0.15,
+        "circle-blur": 1,
       },
     });
 
+    // Main dot
+    this.map.addLayer({
+      id: "military-activity-circle",
+      type: "circle",
+      source: "military-activity",
+      paint: {
+        "circle-radius": 5,
+        "circle-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff",
+        "circle-opacity": 0.95,
+      },
+    });
+
+    // Direction indicator arrow
     this.map.addLayer({
       id: "military-activity-label",
       type: "symbol",
       source: "military-activity",
       layout: {
-        "text-field": ["get", "callsign"],
-        "text-size": 9,
-        "text-offset": [0, 2],
-        "text-anchor": "top",
+        "text-field": ["concat", "\u25B2 ", ["get", "callsign"]],
+        "text-size": 10,
+        "text-offset": [0, -1.5],
+        "text-anchor": "bottom",
+        "text-rotate": ["get", "heading"],
       },
-      paint: { "text-color": "#ef5350", "text-halo-color": "#000", "text-halo-width": 1 },
-      minzoom: 7,
+      paint: { "text-color": "#e0e6f0", "text-halo-color": "#000", "text-halo-width": 1.5 },
+      minzoom: 6,
     });
 
     this.addPopup("military-activity-circle", (props) =>
-      `<strong>\u2708 ${props.callsign || "Unknown"}</strong><br/>Altitude: ${props.altitude} ft<br/>Classification: ${props.classification}<br/>Heading: ${props.heading}\u00B0`
+      `<strong>\u25B2 ${props.callsign || "Unknown"}</strong><br/>Altitude: ${props.altitude} ft<br/>Classification: ${props.classification}<br/>Heading: ${props.heading}\u00B0`
     );
 
     this.fetchMilitaryFlights();
@@ -527,29 +536,44 @@ export class DeckGLMap {
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("ship-traffic", { type: "geojson", data: emptyGeoJSON });
 
+    // Vessel glow ring
     this.map.addLayer({
-      id: "ship-traffic-circle",
-      type: "symbol",
+      id: "ship-traffic-glow",
+      type: "circle",
       source: "ship-traffic",
-      layout: {
-        "text-field": "\u2693\uFE0E",
-        "text-size": 18,
-        "text-allow-overlap": true,
-        "text-ignore-placement": true,
-        "text-font": ["Open Sans Bold"],
-        visibility: "none",
-      },
+      layout: { visibility: "none" },
       paint: {
-        "text-color": [
+        "circle-radius": 10,
+        "circle-color": [
           "match", ["get", "classification"],
           "ccg", "#ef5350", "plan", "#ef5350", "pafmm", "#ef5350",
           "ph-navy", "#4fc3f7", "ph-coast-guard", "#4fc3f7",
           "us-navy", "#4fc3f7",
           "#66bb6a",
         ],
-        "text-halo-color": "#000",
-        "text-halo-width": 2,
-        "text-opacity": 0.95,
+        "circle-opacity": 0.15,
+        "circle-blur": 1,
+      },
+    });
+
+    // Main vessel dot
+    this.map.addLayer({
+      id: "ship-traffic-circle",
+      type: "circle",
+      source: "ship-traffic",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": 4,
+        "circle-color": [
+          "match", ["get", "classification"],
+          "ccg", "#ef5350", "plan", "#ef5350", "pafmm", "#ef5350",
+          "ph-navy", "#4fc3f7", "ph-coast-guard", "#4fc3f7",
+          "us-navy", "#4fc3f7",
+          "#66bb6a",
+        ],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff",
+        "circle-opacity": 0.9,
       },
     });
 
@@ -560,7 +584,7 @@ export class DeckGLMap {
       layout: {
         "text-field": ["get", "name"],
         "text-size": 9,
-        "text-offset": [0, 1.8],
+        "text-offset": [0, 1.5],
         "text-anchor": "top",
         visibility: "none",
       },
@@ -569,7 +593,7 @@ export class DeckGLMap {
     });
 
     this.addPopup("ship-traffic-circle", (props) =>
-      `<strong>\u{1F6A2} ${props.name || "Unknown"}</strong><br/>Type: ${props.classification.toUpperCase()}<br/>Near: ${props.nearFeature || "Open sea"}`
+      `<strong>${props.name || "Unknown"}</strong><br/>Type: ${props.classification.toUpperCase()}<br/>Near: ${props.nearFeature || "Open sea"}`
     );
   }
 
@@ -922,12 +946,15 @@ export class DeckGLMap {
         await Promise.allSettled(fetches);
       }
 
+      // Add small random jitter so articles at same city don't stack
+      const jitter = () => (Math.random() - 0.5) * 0.08;
+
       const features: GeoJSON.Feature[] = articles
         .filter((a): a is GeoArticle & { lat: number; lon: number } => a.lat != null && a.lon != null)
         .slice(0, 60)
         .map((a) => ({
           type: "Feature" as const,
-          geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
+          geometry: { type: "Point" as const, coordinates: [a.lon + jitter(), a.lat + jitter()] },
           properties: {
             title: a.title.length > 80 ? a.title.slice(0, 77) + "..." : a.title,
             label: a.title.length > 30 ? a.title.slice(0, 27) + "..." : a.title,
@@ -938,6 +965,8 @@ export class DeckGLMap {
             url: (a as GeoArticle & { url?: string }).url || "",
           },
         }));
+
+      console.log(`[news-signals] Plotting ${features.length} geo-tagged articles on map`);
 
       const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
       const src = this.map.getSource("news-signals") as maplibregl.GeoJSONSource | undefined;
@@ -950,37 +979,26 @@ export class DeckGLMap {
   private startPulseAnimation(): void {
     if (!this.map) return;
     let time = 0;
-    const circleLayers = [
+    const pulseLayers = [
       { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.006, phase: 0 },
       { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.008, phase: 0.4 },
       { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.005, phase: 0.7 },
-      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.85, speed: 0.007, phase: 0.5 },
-      { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.004, phase: 0.8 },
-    ];
-    const symbolLayers = [
-      { id: "military-activity-circle", baseSize: 20, baseOpacity: 0.9, speed: 0.009, phase: 0.2 },
-      { id: "ship-traffic-circle", baseSize: 16, baseOpacity: 0.9, speed: 0.007, phase: 0.6 },
-      { id: "weather-data-circle", baseSize: 13, baseOpacity: 0.95, speed: 0.005, phase: 0.3 },
+      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.80, speed: 0.007, phase: 0.5 },
+      { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.80, speed: 0.004, phase: 0.8 },
+      { id: "military-activity-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.009, phase: 0.2 },
+      { id: "ship-traffic-circle", baseRadius: 4, baseOpacity: 0.85, speed: 0.007, phase: 0.6 },
     ];
     const animate = () => {
       if (!this.map) return;
       time++;
 
-      for (const layer of circleLayers) {
+      for (const layer of pulseLayers) {
         const wave = Math.sin((time * layer.speed + layer.phase) * Math.PI * 2);
-        const scale = 1 + 0.2 * wave;
+        const scale = 1 + 0.15 * wave;
         const opacityShift = 0.1 * wave;
         try {
           this.map.setPaintProperty(layer.id, "circle-radius", layer.baseRadius * scale);
-          this.map.setPaintProperty(layer.id, "circle-opacity", Math.max(0.4, layer.baseOpacity + opacityShift));
-        } catch { /* layer may not exist */ }
-      }
-
-      for (const layer of symbolLayers) {
-        const wave = Math.sin((time * layer.speed + layer.phase) * Math.PI * 2);
-        const opacityShift = 0.08 * wave;
-        try {
-          this.map.setPaintProperty(layer.id, "text-opacity", Math.max(0.5, layer.baseOpacity + opacityShift));
+          this.map.setPaintProperty(layer.id, "circle-opacity", Math.min(1.0, Math.max(0.4, layer.baseOpacity + opacityShift)));
         } catch { /* layer may not exist */ }
       }
 
