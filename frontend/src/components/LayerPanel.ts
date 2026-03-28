@@ -20,6 +20,11 @@ const LAYERS: LayerDefinition[] = [
   { id: "ship-traffic", name: "SHIP TRAFFIC", color: "#66bb6a", icon: "\u{1F6A2}", defaultOn: false },
   { id: "typhoon-tracks", name: "TYPHOON TRACKS", color: "#ffa726", icon: "\u{1F300}", defaultOn: false },
   { id: "news-signals", name: "NEWS SIGNALS", color: "#4fc3f7", icon: "\u{1F4F0}", defaultOn: true },
+  { id: "weather-data", name: "WEATHER DATA", color: "#66bb6a", icon: "\u{1F321}", defaultOn: true },
+  { id: "oil-depots", name: "OIL DEPOTS", color: "#ff7043", icon: "\u{1F6E2}", defaultOn: false },
+  { id: "eez-boundary", name: "PH EEZ BOUNDARY", color: "#4fc3f7", icon: "\u{1F30A}", defaultOn: false },
+  { id: "shipping-lanes", name: "SHIPPING LANES", color: "#66bb6a", icon: "\u{26F5}", defaultOn: false },
+  { id: "flood-zones", name: "FLOOD ZONES", color: "#42a5f5", icon: "\u{1F4A7}", defaultOn: false },
 ];
 
 const TIME_RANGES = [
