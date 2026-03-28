@@ -1959,6 +1959,56 @@ body.compact-mode .news-item {
   font-size: 10px;
 }
 
+/* ===== PSE STOCK ITEMS ===== */
+
+.pse-header {
+  margin-bottom: 4px;
+}
+
+.pse-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stock-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stock-symbol {
+  color: var(--accent-blue);
+  font-weight: 600;
+  min-width: 45px;
+}
+
+.stock-price {
+  color: var(--text-primary);
+  flex: 1;
+  text-align: right;
+  margin-right: 8px;
+}
+
+.stock-change {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
+.stock-up {
+  color: var(--accent-green);
+}
+
+.stock-down {
+  color: var(--accent-red);
+}
+
 /* ===== MAP COORDINATE DISPLAY ===== */
 
 .map-coord-display {
