@@ -3,6 +3,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { PH_CENTER, PH_DEFAULT_ZOOM, WPS_FEATURES, EDCA_SITES, ACTIVE_VOLCANOES, FAULT_LINES } from "../config/geo";
 import { SUBMARINE_CABLES, MAJOR_PORTS } from "../config/infrastructure";
 import type { WPSFeature, EDCASite, VolcanoEntry } from "../config/geo";
+import type { TrackedVessel } from "@bantay-pilipinas/shared";
 
 interface LayerGroup {
   sourceId: string;
@@ -16,10 +17,21 @@ const LAYER_GROUPS: Record<string, LayerGroup> = {
   "fault-lines": { sourceId: "fault-lines", layerIds: ["fault-lines-line", "fault-lines-label"] },
   "submarine-cables": { sourceId: "submarine-cables", layerIds: ["submarine-cables-circle", "submarine-cables-label"] },
   "major-ports": { sourceId: "major-ports", layerIds: ["major-ports-circle", "major-ports-label"] },
+  "military-activity": { sourceId: "military-activity", layerIds: ["military-activity-circle", "military-activity-label"] },
+  "ship-traffic": { sourceId: "ship-traffic", layerIds: ["ship-traffic-circle", "ship-traffic-label"] },
+  "typhoon-tracks": { sourceId: "typhoon-tracks", layerIds: ["typhoon-tracks-line", "typhoon-tracks-point"] },
+  "weather-systems": { sourceId: "weather-systems", layerIds: ["weather-systems-circle", "weather-systems-label"] },
+  "intel-hotspots": { sourceId: "intel-hotspots", layerIds: ["intel-hotspots-circle", "intel-hotspots-label"] },
+  "conflict-zones": { sourceId: "conflict-zones", layerIds: ["conflict-zones-fill"] },
 };
+
+const BARMM_POLYGON: [number, number][] = [
+  [121.5, 5.5], [124.5, 5.5], [124.5, 8.5], [121.5, 8.5], [121.5, 5.5],
+];
 
 export class DeckGLMap {
   private map: maplibregl.Map | null = null;
+  private vesselStore: Map<number, TrackedVessel> = new Map();
 
   constructor(private container: HTMLElement) {}
 
@@ -49,11 +61,22 @@ export class DeckGLMap {
       this.addFaultLines();
       this.addSubmarineCables();
       this.addMajorPorts();
+      this.addMilitaryActivity();
+      this.addShipTraffic();
+      this.addTyphoonTracks();
+      this.addWeatherSystems();
+      this.addIntelHotspots();
+      this.addConflictZones();
     });
 
     document.addEventListener("layer-toggle", ((e: CustomEvent) => {
       const { layerId, visible } = e.detail;
       this.setLayerVisibility(layerId, visible);
+    }) as EventListener);
+
+    document.addEventListener("ais-vessel-update", ((e: CustomEvent<TrackedVessel>) => {
+      this.vesselStore.set(e.detail.mmsi, e.detail);
+      this.updateShipTrafficSource();
     }) as EventListener);
   }
 
@@ -374,6 +397,371 @@ export class DeckGLMap {
     );
   }
 
+  private addMilitaryActivity(): void {
+    if (!this.map) return;
+
+    const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    this.map.addSource("military-activity", { type: "geojson", data: emptyGeoJSON });
+
+    this.map.addLayer({
+      id: "military-activity-circle",
+      type: "circle",
+      source: "military-activity",
+      paint: {
+        "circle-radius": 6,
+        "circle-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "#ef5350"],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff",
+        "circle-opacity": 0.9,
+      },
+    });
+
+    this.map.addLayer({
+      id: "military-activity-label",
+      type: "symbol",
+      source: "military-activity",
+      layout: {
+        "text-field": ["get", "callsign"],
+        "text-size": 9,
+        "text-offset": [0, 1.5],
+        "text-anchor": "top",
+      },
+      paint: { "text-color": "#ef5350", "text-halo-color": "#000", "text-halo-width": 1 },
+      minzoom: 7,
+    });
+
+    this.addPopup("military-activity-circle", (props) =>
+      `<strong>${props.callsign || "Unknown"}</strong><br/>Alt: ${props.altitude}ft<br/>${props.classification}`
+    );
+
+    this.fetchMilitaryFlights();
+    setInterval(() => this.fetchMilitaryFlights(), 300_000);
+  }
+
+  private async fetchMilitaryFlights(): Promise<void> {
+    if (!this.map) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/military`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const flights = json.data || [];
+      const geojson: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: flights.map((f: { lat: number; lon: number; callsign: string | null; altitude: number; classification: string }) => ({
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: [f.lon, f.lat] },
+          properties: { callsign: f.callsign || "Unknown", altitude: Math.round(f.altitude).toString(), classification: f.classification },
+        })),
+      };
+      const src = this.map.getSource("military-activity") as maplibregl.GeoJSONSource | undefined;
+      if (src) src.setData(geojson);
+    } catch {
+      // silently fail
+    }
+  }
+
+  private addShipTraffic(): void {
+    if (!this.map) return;
+
+    const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    this.map.addSource("ship-traffic", { type: "geojson", data: emptyGeoJSON });
+
+    this.map.addLayer({
+      id: "ship-traffic-circle",
+      type: "circle",
+      source: "ship-traffic",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": 4,
+        "circle-color": [
+          "match", ["get", "classification"],
+          "ccg", "#ef5350", "plan", "#ef5350", "pafmm", "#ef5350",
+          "ph-navy", "#4fc3f7", "ph-coast-guard", "#4fc3f7",
+          "us-navy", "#4fc3f7",
+          "#66bb6a",
+        ],
+        "circle-stroke-width": 1,
+        "circle-stroke-color": "#fff",
+        "circle-opacity": 0.8,
+      },
+    });
+
+    this.map.addLayer({
+      id: "ship-traffic-label",
+      type: "symbol",
+      source: "ship-traffic",
+      layout: {
+        "text-field": ["get", "name"],
+        "text-size": 9,
+        "text-offset": [0, 1.3],
+        "text-anchor": "top",
+        visibility: "none",
+      },
+      paint: { "text-color": "#66bb6a", "text-halo-color": "#000", "text-halo-width": 1 },
+      minzoom: 8,
+    });
+
+    this.addPopup("ship-traffic-circle", (props) =>
+      `<strong>${props.name || "Unknown"}</strong><br/>${props.classification.toUpperCase()}<br/>${props.nearFeature || "Open sea"}`
+    );
+  }
+
+  private updateShipTrafficSource(): void {
+    if (!this.map) return;
+    const features = Array.from(this.vesselStore.values()).map((v) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [v.lon, v.lat] },
+      properties: { name: v.name || "Unknown", classification: v.classification, nearFeature: v.nearFeature || "" },
+    }));
+    const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+    const src = this.map.getSource("ship-traffic") as maplibregl.GeoJSONSource | undefined;
+    if (src) src.setData(geojson);
+  }
+
+  private addTyphoonTracks(): void {
+    if (!this.map) return;
+
+    const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    this.map.addSource("typhoon-tracks", { type: "geojson", data: emptyGeoJSON });
+
+    this.map.addLayer({
+      id: "typhoon-tracks-line",
+      type: "line",
+      source: "typhoon-tracks",
+      layout: { visibility: "none" },
+      filter: ["==", ["geometry-type"], "LineString"],
+      paint: { "line-color": "#ffa726", "line-width": 3, "line-opacity": 0.8 },
+    });
+
+    this.map.addLayer({
+      id: "typhoon-tracks-point",
+      type: "circle",
+      source: "typhoon-tracks",
+      layout: { visibility: "none" },
+      filter: ["==", ["geometry-type"], "Point"],
+      paint: {
+        "circle-radius": 8,
+        "circle-color": "#ffa726",
+        "circle-stroke-width": 3,
+        "circle-stroke-color": "#fff3e0",
+        "circle-opacity": 0.9,
+      },
+    });
+
+    this.addPopup("typhoon-tracks-point", (props) =>
+      `<strong>${props.name}</strong><br/>Wind: ${props.wind} kph`
+    );
+
+    this.fetchTyphoonData();
+    setInterval(() => this.fetchTyphoonData(), 1_800_000);
+  }
+
+  private async fetchTyphoonData(): Promise<void> {
+    if (!this.map) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/disaster`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const typhoons = json.data?.typhoons || [];
+      const features: GeoJSON.Feature[] = [];
+
+      for (const t of typhoons) {
+        if (!t.isActive) continue;
+        features.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [t.lon, t.lat] },
+          properties: { name: t.localName || t.internationalName || "Unknown", wind: String(t.maxWindKph || 0) },
+        });
+        if (t.forecastTrack && t.forecastTrack.length >= 2) {
+          const coords = t.forecastTrack.map((p: { lon: number; lat: number }) => [p.lon, p.lat]);
+          coords.unshift([t.lon, t.lat]);
+          features.push({
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: coords },
+            properties: { name: t.localName || t.internationalName || "Unknown" },
+          });
+        }
+      }
+
+      const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+      const src = this.map.getSource("typhoon-tracks") as maplibregl.GeoJSONSource | undefined;
+      if (src) src.setData(geojson);
+    } catch {
+      // silently fail
+    }
+  }
+
+  private addWeatherSystems(): void {
+    if (!this.map) return;
+
+    const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    this.map.addSource("weather-systems", { type: "geojson", data: emptyGeoJSON });
+
+    this.map.addLayer({
+      id: "weather-systems-circle",
+      type: "circle",
+      source: "weather-systems",
+      layout: { visibility: "none" },
+      paint: {
+        "circle-radius": 12,
+        "circle-color": "#ffa726",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff3e0",
+        "circle-opacity": 0.6,
+      },
+    });
+
+    this.map.addLayer({
+      id: "weather-systems-label",
+      type: "symbol",
+      source: "weather-systems",
+      layout: {
+        "text-field": ["get", "title"],
+        "text-size": 10,
+        "text-offset": [0, 2],
+        "text-anchor": "top",
+        visibility: "none",
+      },
+      paint: { "text-color": "#ffa726", "text-halo-color": "#000", "text-halo-width": 1 },
+    });
+
+    this.addPopup("weather-systems-circle", (props) =>
+      `<strong>${props.title}</strong><br/>${props.type}`
+    );
+
+    this.fetchWeatherSystems();
+    setInterval(() => this.fetchWeatherSystems(), 1_800_000);
+  }
+
+  private async fetchWeatherSystems(): Promise<void> {
+    if (!this.map) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/disaster`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const advisories = json.data?.weatherAdvisories || [];
+      const features: GeoJSON.Feature[] = advisories
+        .filter((a: { lat: number | null; lon: number | null; isActive: boolean }) => a.lat != null && a.lon != null && a.isActive)
+        .map((a: { lat: number; lon: number; title: string; type: string }) => ({
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
+          properties: { title: a.title, type: a.type },
+        }));
+
+      const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+      const src = this.map.getSource("weather-systems") as maplibregl.GeoJSONSource | undefined;
+      if (src) src.setData(geojson);
+    } catch {
+      // silently fail
+    }
+  }
+
+  private addIntelHotspots(): void {
+    if (!this.map) return;
+
+    const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    this.map.addSource("intel-hotspots", { type: "geojson", data: emptyGeoJSON });
+
+    this.map.addLayer({
+      id: "intel-hotspots-circle",
+      type: "circle",
+      source: "intel-hotspots",
+      paint: {
+        "circle-radius": 6,
+        "circle-color": "#ef5350",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffcdd2",
+        "circle-opacity": 0.85,
+      },
+    });
+
+    this.map.addLayer({
+      id: "intel-hotspots-label",
+      type: "symbol",
+      source: "intel-hotspots",
+      layout: {
+        "text-field": ["get", "label"],
+        "text-size": 9,
+        "text-offset": [0, 1.5],
+        "text-anchor": "top",
+      },
+      paint: { "text-color": "#ef5350", "text-halo-color": "#000", "text-halo-width": 1 },
+      minzoom: 7,
+    });
+
+    this.addPopup("intel-hotspots-circle", (props) =>
+      `<strong>${props.label}</strong><br/>${props.type}`
+    );
+
+    this.fetchIntelHotspots();
+    setInterval(() => this.fetchIntelHotspots(), 3_600_000);
+  }
+
+  private async fetchIntelHotspots(): Promise<void> {
+    if (!this.map) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/risk-scores`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const regions = json.data?.regions || [];
+
+      const regionCoords: Record<string, [number, number]> = {
+        ncr: [120.9842, 14.5995],
+        barmm: [124.25, 6.95],
+        wps: [116.0, 12.0],
+        car: [121.0, 16.5],
+        "ev-bicol": [124.5, 12.0],
+      };
+
+      const features: GeoJSON.Feature[] = regions
+        .filter((r: { level: string }) => r.level === "elevated" || r.level === "high" || r.level === "severe")
+        .map((r: { regionId: string; score: number; level: string }) => {
+          const coords = regionCoords[r.regionId];
+          if (!coords) return null;
+          return {
+            type: "Feature" as const,
+            geometry: { type: "Point" as const, coordinates: coords },
+            properties: { label: r.regionId.toUpperCase(), type: `${r.level} (${r.score.toFixed(1)})` },
+          };
+        })
+        .filter(Boolean);
+
+      const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: features as GeoJSON.Feature[] };
+      const src = this.map.getSource("intel-hotspots") as maplibregl.GeoJSONSource | undefined;
+      if (src) src.setData(geojson);
+    } catch {
+      // silently fail
+    }
+  }
+
+  private addConflictZones(): void {
+    if (!this.map) return;
+
+    const geojson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: { type: "Polygon", coordinates: [BARMM_POLYGON] },
+          properties: { name: "BARMM", description: "Bangsamoro Autonomous Region" },
+        },
+      ],
+    };
+
+    this.map.addSource("conflict-zones", { type: "geojson", data: geojson });
+
+    this.map.addLayer({
+      id: "conflict-zones-fill",
+      type: "fill",
+      source: "conflict-zones",
+      paint: {
+        "fill-color": "#ef5350",
+        "fill-opacity": 0.12,
+        "fill-outline-color": "#ef5350",
+      },
+    });
+  }
+
   private addPopup(layerId: string, html: (props: Record<string, string>) => string): void {
     if (!this.map) return;
 
@@ -395,6 +783,6 @@ export class DeckGLMap {
   }
 
   updateLayers(_layers: unknown[]): void {
-    // Future: update deck.gl overlay layers
+    // Reserved for future deck.gl overlay integration
   }
 }

@@ -5,22 +5,30 @@ interface LiveChannel {
   id: string;
   name: string;
   ytChannel: string;
+  liveVideoId?: string;
 }
 
 const LIVE_CHANNELS: LiveChannel[] = [
-  { id: "abs-cbn", name: "ABS-CBN", ytChannel: "UCstEtN1GBximQ0ZMy2FE0dA" },
-  { id: "gma", name: "GMA", ytChannel: "UCVPbYEWwYOH5jm6Bvi0XkYg" },
+  { id: "abs-cbn", name: "ABS-CBN", ytChannel: "UCstEtN1GBximQ0ZMy2FE0dA", liveVideoId: "cEFSANcb430" },
+  { id: "gma", name: "GMA", ytChannel: "UCVPbYEWwYOH5jm6Bvi0XkYg", liveVideoId: "4aHDBsg68Wc" },
   { id: "cnn-ph", name: "CNN PH", ytChannel: "UCeEj9SKvxkOTkmGmFSMredQ" },
-  { id: "ptv", name: "PTV", ytChannel: "UCm1oP_sg26QBKAC4UGFjMhA" },
+  { id: "ptv", name: "PTV", ytChannel: "UCm1oP_sg26QBKAC4UGFjMhA", liveVideoId: "2EmkF-Mxm1s" },
   { id: "rappler", name: "RAPPLER", ytChannel: "UCiNfMdFmMnMHFGNRsaRwISA" },
 ];
+
+function buildEmbedUrl(channel: LiveChannel): string {
+  if (channel.liveVideoId) {
+    return `https://www.youtube.com/embed/${channel.liveVideoId}?autoplay=1&mute=1&rel=0`;
+  }
+  return `https://www.youtube.com/embed/live_stream?channel=${channel.ytChannel}&autoplay=1&mute=1`;
+}
 
 export class LiveNewsPanel {
   private api: ApiClient;
   private el: HTMLElement | null = null;
   private activeChannel = LIVE_CHANNELS[0];
   private newsCount = 0;
-  // radar element reference managed via DOM queries
+  private iframeLoadFailed = false;
 
   constructor(api: ApiClient) {
     this.api = api;
@@ -33,6 +41,7 @@ export class LiveNewsPanel {
     this.el = el;
     this.attachEvents(el);
     this.loadRadar();
+    this.monitorIframe(el);
     return el;
   }
 
@@ -51,11 +60,16 @@ export class LiveNewsPanel {
       <div class="video-container">
         <iframe
           id="live-video-iframe"
-          src="https://www.youtube.com/embed/live_stream?channel=${this.activeChannel.ytChannel}&autoplay=1&mute=1"
+          src="${buildEmbedUrl(this.activeChannel)}"
           frameborder="0"
           allow="autoplay; encrypted-media"
           allowfullscreen
         ></iframe>
+        <div class="video-fallback hidden" id="video-fallback">
+          <span class="fallback-icon">&#x1F4FA;</span>
+          <span class="fallback-text">Live stream unavailable</span>
+          <a href="https://www.youtube.com/channel/${this.activeChannel.ytChannel}/live" target="_blank" rel="noopener" class="fallback-link">Watch on YouTube</a>
+        </div>
         <div class="radar-overlay" id="radar-overlay">
           <span class="radar-label">ON OUR RADAR</span>
           <span class="radar-text" id="radar-text">Loading...</span>
@@ -72,15 +86,45 @@ export class LiveNewsPanel {
         if (!channel) return;
 
         this.activeChannel = channel;
+        this.iframeLoadFailed = false;
         el.querySelectorAll(".channel-tab").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
         const iframe = el.querySelector<HTMLIFrameElement>("#live-video-iframe");
+        const fallback = el.querySelector<HTMLElement>("#video-fallback");
         if (iframe) {
-          iframe.src = `https://www.youtube.com/embed/live_stream?channel=${channel.ytChannel}&autoplay=1&mute=1`;
+          iframe.classList.remove("hidden");
+          iframe.src = buildEmbedUrl(channel);
         }
+        if (fallback) {
+          fallback.classList.add("hidden");
+          const link = fallback.querySelector<HTMLAnchorElement>(".fallback-link");
+          if (link) link.href = `https://www.youtube.com/channel/${channel.ytChannel}/live`;
+        }
+
+        this.monitorIframe(el);
       });
     });
+  }
+
+  private monitorIframe(el: HTMLElement): void {
+    const iframe = el.querySelector<HTMLIFrameElement>("#live-video-iframe");
+    const fallback = el.querySelector<HTMLElement>("#video-fallback");
+    if (!iframe || !fallback) return;
+
+    const timer = setTimeout(() => {
+      if (!this.iframeLoadFailed) {
+        this.iframeLoadFailed = true;
+        if (!this.activeChannel.liveVideoId) {
+          iframe.classList.add("hidden");
+          fallback.classList.remove("hidden");
+        }
+      }
+    }, 10_000);
+
+    iframe.addEventListener("load", () => {
+      clearTimeout(timer);
+    }, { once: true });
   }
 
   private async loadRadar(): Promise<void> {

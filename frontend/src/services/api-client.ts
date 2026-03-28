@@ -123,6 +123,10 @@ export class ApiClient {
     });
   }
 
+  async getMilitary(): Promise<ApiResponse<unknown[]>> {
+    return fetchJsonWithFallback("/api/military", []);
+  }
+
   async getHealth(): Promise<HealthResponse> {
     const urls = API_BASE
       ? [`${API_BASE}/api/health`, "/api/health"]
