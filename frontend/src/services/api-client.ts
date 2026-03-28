@@ -117,6 +117,13 @@ const DIRECT_FEEDS: DirectFeedConfig[] = [
   { url: "https://news.google.com/rss/headlines/section/geo/Baguio?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Baguio", category: "regional", tier: 4, regionId: "baguio", lat: 16.4023, lon: 120.596 },
   { url: "https://news.google.com/rss/headlines/section/geo/Tacloban?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Tacloban", category: "regional", tier: 4, regionId: "tacloban", lat: 11.2543, lon: 124.96 },
   { url: "https://news.google.com/rss/headlines/section/geo/Palawan?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Palawan", category: "regional", tier: 4, regionId: "palawan", lat: 9.8349, lon: 118.7384 },
+  // Domain expert feeds
+  { url: "https://news.google.com/rss/search?q=PNP+Philippines+crime+arrest+operation&hl=en-PH&gl=PH&ceid=PH:en", name: "PNP Crime", category: "crime", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=Philippines+flood+warning+NDRRMC+evacuation&hl=en-PH&gl=PH&ceid=PH:en", name: "Flood Warnings", category: "disaster", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=Philippines+rice+price+NFA+food&hl=en-PH&gl=PH&ceid=PH:en", name: "Rice Prices", category: "economy", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=Philippines+dengue+DOH+outbreak&hl=en-PH&gl=PH&ceid=PH:en", name: "Dengue/Health", category: "disaster", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=Philippines+power+outage+brownout+Meralco&hl=en-PH&gl=PH&ceid=PH:en", name: "Power Outage", category: "economy", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=China+Philippines+South+China+Sea+coast+guard&hl=en-PH&gl=PH&ceid=PH:en", name: "WPS China", category: "wps-maritime", tier: 4 },
 ];
 
 let directNewsCache: { articles: NewsArticle[]; fetchedAt: number } | null = null;
@@ -208,6 +215,37 @@ async function fetchDirectEarthquakes(): Promise<Earthquake[]> {
     return [];
   }
 }
+
+// ─── Phisix PSE Stock API (free, CORS, no auth) ───
+
+export interface PhisixStock {
+  name: string;
+  price: { currency: string; amount: number };
+  percent_change: number;
+  volume: number;
+  symbol: string;
+}
+
+let pseCache: { stocks: PhisixStock[]; fetchedAt: number } | null = null;
+const PSE_CACHE_TTL = 60_000;
+
+export async function fetchPSEStocks(): Promise<PhisixStock[]> {
+  if (pseCache && Date.now() - pseCache.fetchedAt < PSE_CACHE_TTL) {
+    return pseCache.stocks;
+  }
+  try {
+    const res = await fetch("https://phisix-api4.appspot.com/stocks.json", { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const stocks = (json.stock || []) as PhisixStock[];
+    pseCache = { stocks, fetchedAt: Date.now() };
+    return stocks;
+  } catch {
+    return [];
+  }
+}
+
+// ─── GDELT ───
 
 interface GDELTDoc {
   url: string;
