@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { NewsArticle, ApiResponse } from "@bantay-pilipinas/shared";
-import { getStoredArticles } from "../scrapers/rss-aggregator.js";
+import { getStoredArticles, getGeoArticles } from "../scrapers/rss-aggregator.js";
 
 export function registerNewsRoutes(app: FastifyInstance): void {
   app.get("/api/news", {
@@ -9,15 +9,16 @@ export function registerNewsRoutes(app: FastifyInstance): void {
         type: "object",
         properties: {
           category: { type: "string" },
+          region: { type: "string" },
         },
         additionalProperties: false,
       },
     },
   }, async (request) => {
-    const { category } = request.query as { category?: string };
+    const { category, region } = request.query as { category?: string; region?: string };
 
     try {
-      const articles = await getStoredArticles(category, 50);
+      const articles = await getStoredArticles(category, 50, region);
       const response: ApiResponse<NewsArticle[]> = {
         data: articles as unknown as NewsArticle[],
         meta: { freshness: articles.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
@@ -30,6 +31,20 @@ export function registerNewsRoutes(app: FastifyInstance): void {
         meta: { freshness: "error", timestamp: new Date().toISOString() },
       };
       return response;
+    }
+  });
+
+  app.get("/api/news/geo", async () => {
+    try {
+      const articles = await getGeoArticles(100);
+      const response: ApiResponse<NewsArticle[]> = {
+        data: articles as unknown as NewsArticle[],
+        meta: { freshness: articles.length > 0 ? "live" : "empty", timestamp: new Date().toISOString() },
+      };
+      return response;
+    } catch (err) {
+      console.warn("[news] Failed to get geo articles:", (err as Error).message);
+      return { data: [], meta: { freshness: "error", timestamp: new Date().toISOString() } };
     }
   });
 }

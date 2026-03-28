@@ -27,6 +27,9 @@ export interface NewsArticle {
   fetchedAt: string;
   entities: string[];
   sentiment: "positive" | "negative" | "neutral";
+  regionId?: string;
+  lat?: number | null;
+  lon?: number | null;
 }
 
 export interface NewsCluster {

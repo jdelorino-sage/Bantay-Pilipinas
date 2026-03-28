@@ -19,6 +19,7 @@ const LAYERS: LayerDefinition[] = [
   { id: "military-activity", name: "MILITARY ACTIVITY", color: "#ef5350", icon: "\u2708", defaultOn: true },
   { id: "ship-traffic", name: "SHIP TRAFFIC", color: "#66bb6a", icon: "\u{1F6A2}", defaultOn: false },
   { id: "typhoon-tracks", name: "TYPHOON TRACKS", color: "#ffa726", icon: "\u{1F300}", defaultOn: false },
+  { id: "news-signals", name: "NEWS SIGNALS", color: "#4fc3f7", icon: "\u{1F4F0}", defaultOn: true },
 ];
 
 const TIME_RANGES = [
