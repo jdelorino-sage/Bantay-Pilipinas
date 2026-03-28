@@ -129,7 +129,7 @@ export class App {
   private initMap(): void {
     const mapEl = document.getElementById("map-container");
     if (mapEl) {
-      this.mapContainer = new MapContainer(mapEl);
+      this.mapContainer = new MapContainer(mapEl, this.api);
     }
 
     const legendContainer = document.getElementById("map-legend-container");
@@ -160,7 +160,7 @@ export class App {
     } else {
       this.globeMap = null;
       mapEl.innerHTML = "";
-      this.mapContainer = new MapContainer(mapEl);
+      this.mapContainer = new MapContainer(mapEl, this.api);
     }
   }
 

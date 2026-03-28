@@ -6,6 +6,7 @@ import { OIL_DEPOTS } from "../config/energy";
 import { PH_EEZ_POLYGON, SHIPPING_LANES, FLOOD_ZONES, WEATHER_CODES } from "../config/geoint";
 import type { WPSFeature, EDCASite, VolcanoEntry } from "../config/geo";
 import type { TrackedVessel } from "@bantay-pilipinas/shared";
+import type { ApiClient } from "../services/api-client";
 
 interface LayerGroup {
   sourceId: string;
@@ -25,7 +26,7 @@ const LAYER_GROUPS: Record<string, LayerGroup> = {
   "weather-systems": { sourceId: "weather-systems", layerIds: ["weather-systems-circle", "weather-systems-label"] },
   "intel-hotspots": { sourceId: "intel-hotspots", layerIds: ["intel-hotspots-circle", "intel-hotspots-label"] },
   "conflict-zones": { sourceId: "conflict-zones", layerIds: ["conflict-zones-fill"] },
-  "news-signals": { sourceId: "news-signals", layerIds: ["news-signals-circle", "news-signals-label"] },
+  "news-signals": { sourceId: "news-signals", layerIds: ["news-signals-glow", "news-signals-circle", "news-signals-count"] },
   "oil-depots": { sourceId: "oil-depots", layerIds: ["oil-depots-circle", "oil-depots-label"] },
   "weather-data": { sourceId: "weather-data", layerIds: ["weather-data-circle", "weather-data-label"] },
   "eez-boundary": { sourceId: "eez-boundary", layerIds: ["eez-boundary-line"] },
@@ -40,8 +41,11 @@ const BARMM_POLYGON: [number, number][] = [
 export class DeckGLMap {
   private map: maplibregl.Map | null = null;
   private vesselStore: Map<number, TrackedVessel> = new Map();
+  private api: ApiClient | null;
 
-  constructor(private container: HTMLElement) {}
+  constructor(private container: HTMLElement, api?: ApiClient) {
+    this.api = api || null;
+  }
 
   async init(): Promise<void> {
     this.map = new maplibregl.Map({
@@ -61,6 +65,20 @@ export class DeckGLMap {
       new maplibregl.AttributionControl({ compact: true }),
       "bottom-left"
     );
+
+    // Lat/lon coordinate display
+    const coordEl = document.createElement("div");
+    coordEl.className = "map-coord-display";
+    coordEl.textContent = "\u2014";
+    this.container.style.position = "relative";
+    this.container.appendChild(coordEl);
+
+    this.map.on("mousemove", (e) => {
+      const { lng, lat } = e.lngLat;
+      const latDir = lat >= 0 ? "N" : "S";
+      const lonDir = lng >= 0 ? "E" : "W";
+      coordEl.textContent = `${Math.abs(lat).toFixed(4)}\u00B0 ${latDir}, ${Math.abs(lng).toFixed(4)}\u00B0 ${lonDir}`;
+    });
 
     this.map.on("load", () => {
       this.addWPSFeatures();
@@ -831,49 +849,69 @@ export class DeckGLMap {
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("news-signals", { type: "geojson", data: emptyGeoJSON });
 
+    // World Monitor style: outer glow ring (size scales with article count)
+    this.map.addLayer({
+      id: "news-signals-glow",
+      type: "circle",
+      source: "news-signals",
+      paint: {
+        "circle-radius": ["interpolate", ["linear"], ["get", "count"], 1, 18, 3, 25, 6, 32, 10, 40],
+        "circle-color": [
+          "match", ["get", "category"],
+          "disaster", "#ef5350", "wps-maritime", "#ffa726",
+          "defense", "#ab47bc", "crime", "#ef5350",
+          "economy", "#66bb6a", "regional", "#ffa726",
+          "#4fc3f7",
+        ],
+        "circle-opacity": 0.18,
+        "circle-blur": 0.8,
+      },
+    });
+
+    // Inner solid dot (size scales with count)
     this.map.addLayer({
       id: "news-signals-circle",
       type: "circle",
       source: "news-signals",
       paint: {
-        "circle-radius": 8,
+        "circle-radius": ["interpolate", ["linear"], ["get", "count"], 1, 8, 3, 11, 6, 14, 10, 18],
         "circle-color": [
           "match", ["get", "category"],
-          "disaster", "#ef5350",
-          "wps-maritime", "#ffa726",
-          "defense", "#ab47bc",
-          "crime", "#ef5350",
-          "economy", "#66bb6a",
+          "disaster", "#ef5350", "wps-maritime", "#ffa726",
+          "defense", "#ab47bc", "crime", "#ef5350",
+          "economy", "#66bb6a", "regional", "#ffa726",
           "#4fc3f7",
         ],
         "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
+        "circle-stroke-color": "rgba(255,255,255,0.6)",
         "circle-opacity": 0.85,
       },
     });
 
+    // Count badge (shows article count per city)
     this.map.addLayer({
-      id: "news-signals-label",
+      id: "news-signals-count",
       type: "symbol",
       source: "news-signals",
       layout: {
-        "text-field": ["get", "label"],
-        "text-size": 9,
-        "text-offset": [0, 1.8],
-        "text-anchor": "top",
-        "text-max-width": 12,
+        "text-field": ["to-string", ["get", "count"]],
+        "text-size": 11,
+        "text-font": ["Open Sans Bold"],
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
       },
       paint: {
-        "text-color": "#e0e6f0",
-        "text-halo-color": "#000",
+        "text-color": "#fff",
+        "text-halo-color": "rgba(0,0,0,0.5)",
         "text-halo-width": 1,
       },
-      minzoom: 7,
     });
 
-    this.addPopup("news-signals-circle", (props) =>
-      `<strong>${props.title}</strong><br/><em>${props.source}</em><br/>${props.region} &middot; ${props.time}`
-    );
+    this.addPopup("news-signals-circle", (props) => {
+      const headlines = props.headlines ? props.headlines.split("|||").slice(0, 5) : [props.title];
+      const headlineHtml = headlines.map((h: string) => `<div style="margin:2px 0;font-size:11px;">&bull; ${h}</div>`).join("");
+      return `<strong>${props.region.toUpperCase()} (${props.count} articles)</strong><br/>${headlineHtml}`;
+    });
 
     this.fetchNewsSignals();
     setInterval(() => this.fetchNewsSignals(), 120_000);
@@ -882,97 +920,52 @@ export class DeckGLMap {
   private async fetchNewsSignals(): Promise<void> {
     if (!this.map) return;
     try {
-      interface GeoArticle { title: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null; url?: string }
-      let articles: GeoArticle[] = [];
+      // Use ApiClient which has proper fallback chain (rss2json, GDELT, caching)
+      const response = this.api
+        ? await this.api.getNews()
+        : { data: [] as { title: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null }[] };
 
-      // Try backend geo endpoint first
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news/geo`);
-        if (res.ok) {
-          const json = await res.json();
-          articles = (json.data || []).filter((a: GeoArticle) => a.lat != null && a.lon != null);
+      const geoArticles = response.data.filter((a) => a.lat != null && a.lon != null);
+      console.log(`[news-signals] Got ${response.data.length} articles, ${geoArticles.length} with geo coords`);
+
+      // Cluster articles by regionId (World Monitor style - one dot per city with count)
+      const clusters = new Map<string, { lat: number; lon: number; count: number; category: string; region: string; headlines: string[] }>();
+
+      for (const a of geoArticles) {
+        const key = a.regionId || `${a.lat}_${a.lon}`;
+        const existing = clusters.get(key);
+        if (existing) {
+          existing.count++;
+          if (existing.headlines.length < 8) existing.headlines.push(a.title);
+        } else {
+          clusters.set(key, {
+            lat: a.lat!, lon: a.lon!,
+            count: 1, category: a.category,
+            region: a.regionId || key,
+            headlines: [a.title],
+          });
         }
-      } catch { /* fall through */ }
-
-      // Fallback: try regular news with region filter
-      if (articles.length === 0) {
-        try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news`);
-          if (res.ok) {
-            const json = await res.json();
-            articles = (json.data || []).filter((a: GeoArticle) => a.lat != null && a.lon != null);
-          }
-        } catch { /* fall through */ }
       }
 
-      // Fallback: fetch directly from Google News geo RSS feeds via rss2json
-      if (articles.length === 0) {
-        const geoFeeds = [
-          { url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", region: "manila", lat: 14.5995, lon: 120.9842 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Cebu?hl=en-PH&gl=PH&ceid=PH:en", region: "cebu", lat: 10.3157, lon: 123.8854 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Davao?hl=en-PH&gl=PH&ceid=PH:en", region: "davao", lat: 7.1907, lon: 125.4553 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Zamboanga?hl=en-PH&gl=PH&ceid=PH:en", region: "zamboanga", lat: 6.9214, lon: 122.079 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Iloilo?hl=en-PH&gl=PH&ceid=PH:en", region: "iloilo", lat: 10.7202, lon: 122.5621 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Cagayan+de+Oro?hl=en-PH&gl=PH&ceid=PH:en", region: "cdo", lat: 8.4542, lon: 124.6319 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Baguio?hl=en-PH&gl=PH&ceid=PH:en", region: "baguio", lat: 16.4023, lon: 120.596 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Tacloban?hl=en-PH&gl=PH&ceid=PH:en", region: "tacloban", lat: 11.2543, lon: 124.96 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Palawan?hl=en-PH&gl=PH&ceid=PH:en", region: "palawan", lat: 9.8349, lon: 118.7384 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Legazpi?hl=en-PH&gl=PH&ceid=PH:en", region: "legazpi", lat: 13.1391, lon: 123.7438 },
-          { url: "https://news.google.com/rss/headlines/section/geo/Pampanga?hl=en-PH&gl=PH&ceid=PH:en", region: "pampanga", lat: 15.0794, lon: 120.62 },
-          { url: "https://news.google.com/rss/headlines/section/geo/General+Santos?hl=en-PH&gl=PH&ceid=PH:en", region: "gensan", lat: 6.1164, lon: 125.1716 },
-        ];
+      const features: GeoJSON.Feature[] = [...clusters.values()].map((c) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [c.lon, c.lat] },
+        properties: {
+          count: c.count,
+          category: c.category,
+          region: c.region,
+          title: c.headlines[0] || "",
+          headlines: c.headlines.join("|||"),
+        },
+      }));
 
-        const rss2json = "https://api.rss2json.com/v1/api.json?rss_url=";
-        const fetches = geoFeeds.map(async (feed) => {
-          try {
-            const res = await fetch(`${rss2json}${encodeURIComponent(feed.url)}`, { signal: AbortSignal.timeout(8_000) });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json.status !== "ok" || !json.items) return;
-            for (const item of json.items.slice(0, 3)) {
-              if (!item.title) continue;
-              articles.push({
-                title: item.title,
-                lat: feed.lat,
-                lon: feed.lon,
-                category: "regional",
-                source: `Local: ${feed.region.charAt(0).toUpperCase() + feed.region.slice(1)}`,
-                regionId: feed.region,
-                publishedAt: item.pubDate || null,
-              });
-            }
-          } catch { /* skip */ }
-        });
-        await Promise.allSettled(fetches);
-      }
-
-      // Add small random jitter so articles at same city don't stack
-      const jitter = () => (Math.random() - 0.5) * 0.08;
-
-      const features: GeoJSON.Feature[] = articles
-        .filter((a): a is GeoArticle & { lat: number; lon: number } => a.lat != null && a.lon != null)
-        .slice(0, 60)
-        .map((a) => ({
-          type: "Feature" as const,
-          geometry: { type: "Point" as const, coordinates: [a.lon + jitter(), a.lat + jitter()] },
-          properties: {
-            title: a.title.length > 80 ? a.title.slice(0, 77) + "..." : a.title,
-            label: a.title.length > 30 ? a.title.slice(0, 27) + "..." : a.title,
-            source: a.source,
-            category: a.category,
-            region: a.regionId || "",
-            time: a.publishedAt ? new Date(a.publishedAt).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Manila" }) : "",
-            url: (a as GeoArticle & { url?: string }).url || "",
-          },
-        }));
-
-      console.log(`[news-signals] Plotting ${features.length} geo-tagged articles on map`);
+      console.log(`[news-signals] Plotting ${features.length} clustered city dots on map`);
 
       const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
       const src = this.map.getSource("news-signals") as maplibregl.GeoJSONSource | undefined;
       if (src) src.setData(geojson);
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.warn("[news-signals] Failed:", err);
     }
   }
 
@@ -983,7 +976,7 @@ export class DeckGLMap {
       { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.006, phase: 0 },
       { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.008, phase: 0.4 },
       { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.005, phase: 0.7 },
-      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.80, speed: 0.007, phase: 0.5 },
+      { id: "news-signals-glow", baseRadius: 25, baseOpacity: 0.15, speed: 0.007, phase: 0.5 },
       { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.80, speed: 0.004, phase: 0.8 },
       { id: "military-activity-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.009, phase: 0.2 },
       { id: "ship-traffic-circle", baseRadius: 4, baseOpacity: 0.85, speed: 0.007, phase: 0.6 },
