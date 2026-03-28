@@ -67,6 +67,7 @@ export class DeckGLMap {
       this.addWeatherSystems();
       this.addIntelHotspots();
       this.addConflictZones();
+      this.startPulseAnimation();
     });
 
     document.addEventListener("layer-toggle", ((e: CustomEvent) => {
@@ -732,6 +733,35 @@ export class DeckGLMap {
     } catch {
       // silently fail
     }
+  }
+
+  private startPulseAnimation(): void {
+    if (!this.map) return;
+    let phase = 0;
+    const pulseLayers = [
+      { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85 },
+      { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85 },
+      { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85 },
+      { id: "military-activity-circle", baseRadius: 6, baseOpacity: 0.9 },
+    ];
+    const animate = () => {
+      if (!this.map) return;
+      phase += 0.03;
+      const pulse = Math.sin(phase * Math.PI * 2);
+      const scale = 1 + 0.25 * pulse;
+      const opacityShift = 0.15 * pulse;
+
+      for (const layer of pulseLayers) {
+        try {
+          this.map.setPaintProperty(layer.id, "circle-radius", layer.baseRadius * scale);
+          this.map.setPaintProperty(layer.id, "circle-opacity", layer.baseOpacity + opacityShift);
+        } catch {
+          // layer may not exist
+        }
+      }
+      requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
   }
 
   private addConflictZones(): void {
