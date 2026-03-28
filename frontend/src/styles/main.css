@@ -1874,3 +1874,87 @@ body.compact-mode .news-item {
   vertical-align: middle;
   letter-spacing: 0.3px;
 }
+
+/* ===== MAP POPUP ===== */
+
+.bp-popup .maplibregl-popup-content {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.bp-popup .maplibregl-popup-close-button {
+  color: var(--text-secondary);
+  font-size: 16px;
+  padding: 2px 6px;
+}
+
+.bp-popup .maplibregl-popup-close-button:hover {
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.bp-popup .maplibregl-popup-tip {
+  border-top-color: var(--bg-secondary);
+}
+
+.map-popup-content strong {
+  color: var(--accent-blue);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.map-popup-content em {
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+/* ===== FUEL PRICES ===== */
+
+.fuel-section {
+  margin-top: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 6px;
+}
+
+.fuel-header {
+  margin-bottom: 4px;
+}
+
+.fuel-title {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fuel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fuel-city {
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 60px;
+}
+
+.fuel-gas {
+  color: var(--accent-yellow);
+  font-size: 10px;
+  margin-right: 8px;
+}
+
+.fuel-diesel {
+  color: var(--accent-blue);
+  font-size: 10px;
+}

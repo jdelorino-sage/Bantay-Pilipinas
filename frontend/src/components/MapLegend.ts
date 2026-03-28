@@ -7,6 +7,9 @@ const LEGEND_ITEMS = [
   { color: "#4fc3f7", shape: "square", label: "Port" },
   { color: "#4fc3f7", shape: "line", label: "Cable" },
   { color: "#90caf9", shape: "circle", label: "Aircraft" },
+  { color: "#ff7043", shape: "circle", label: "Oil Depot" },
+  { color: "#66bb6a", shape: "circle", label: "Weather" },
+  { color: "#4fc3f7", shape: "circle", label: "News" },
 ];
 
 export class MapLegend {

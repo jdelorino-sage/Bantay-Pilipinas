@@ -1,6 +1,7 @@
 import type { ApiClient } from "../services/api-client";
 import type { EconomicDataPoint } from "@bantay-pilipinas/shared";
 import { escapeHtml } from "../utils/sanitize";
+import { FUEL_PRICES } from "../config/energy";
 
 export class MarketPanel {
   private api: ApiClient;
@@ -21,6 +22,12 @@ export class MarketPanel {
         <div id="market-indicators">
           <p class="panel-placeholder">Loading economic data...</p>
         </div>
+        <div class="fuel-section">
+          <div class="fuel-header">
+            <span class="fuel-title">FUEL PRICES (per liter)</span>
+          </div>
+          <div id="fuel-prices">${this.renderFuelPrices()}</div>
+        </div>
       </div>
     `;
     this.el = el;
@@ -30,6 +37,20 @@ export class MarketPanel {
 
   refresh(): void {
     if (this.el) this.load(this.el);
+  }
+
+  private renderFuelPrices(): string {
+    return FUEL_PRICES.slice(0, 8)
+      .map(
+        (fp) => `
+        <div class="fuel-item">
+          <span class="fuel-city">${escapeHtml(fp.city)}</span>
+          <span class="fuel-gas">\u26FD \u20B1${fp.gasoline.low.toFixed(0)}-${fp.gasoline.high.toFixed(0)}</span>
+          <span class="fuel-diesel">\u{1F6E2} \u20B1${fp.diesel.low.toFixed(0)}-${fp.diesel.high.toFixed(0)}</span>
+        </div>
+      `
+      )
+      .join("");
   }
 
   private async load(el: HTMLElement): Promise<void> {

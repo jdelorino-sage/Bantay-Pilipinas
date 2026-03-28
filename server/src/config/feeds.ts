@@ -66,6 +66,9 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "asia-times", name: "Asia Times", url: "https://asiatimes.com/feed/", tier: 4, category: "defense" },
   { id: "channel-news-asia", name: "Channel NewsAsia", url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511", tier: 4, category: "defense" },
 
+  // ── Fuel/Energy ──
+  { id: "gnews-fuel", name: "Google News Fuel PH", url: "https://news.google.com/rss/search?q=Philippines+fuel+price+diesel+gasoline+DOE&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+
   // ── Regional: Google News Geo RSS per city ──
   { id: "gnews-geo-manila", name: "Local: Manila", url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "manila", location: { lat: 14.5995, lon: 120.9842 } },
   { id: "gnews-geo-cebu", name: "Local: Cebu", url: "https://news.google.com/rss/headlines/section/geo/Cebu?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "cebu", location: { lat: 10.3157, lon: 123.8854 } },
