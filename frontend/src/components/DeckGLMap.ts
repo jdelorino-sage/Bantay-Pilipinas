@@ -23,6 +23,7 @@ const LAYER_GROUPS: Record<string, LayerGroup> = {
   "weather-systems": { sourceId: "weather-systems", layerIds: ["weather-systems-circle", "weather-systems-label"] },
   "intel-hotspots": { sourceId: "intel-hotspots", layerIds: ["intel-hotspots-circle", "intel-hotspots-label"] },
   "conflict-zones": { sourceId: "conflict-zones", layerIds: ["conflict-zones-fill"] },
+  "news-signals": { sourceId: "news-signals", layerIds: ["news-signals-circle", "news-signals-label"] },
 };
 
 const BARMM_POLYGON: [number, number][] = [
@@ -67,6 +68,7 @@ export class DeckGLMap {
       this.addWeatherSystems();
       this.addIntelHotspots();
       this.addConflictZones();
+      this.addNewsSignals();
       this.startPulseAnimation();
     });
 
@@ -735,6 +737,106 @@ export class DeckGLMap {
     }
   }
 
+  private addNewsSignals(): void {
+    if (!this.map) return;
+
+    const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+    this.map.addSource("news-signals", { type: "geojson", data: emptyGeoJSON });
+
+    this.map.addLayer({
+      id: "news-signals-circle",
+      type: "circle",
+      source: "news-signals",
+      paint: {
+        "circle-radius": 8,
+        "circle-color": [
+          "match", ["get", "category"],
+          "disaster", "#ef5350",
+          "wps-maritime", "#ffa726",
+          "defense", "#ab47bc",
+          "crime", "#ef5350",
+          "economy", "#66bb6a",
+          "#4fc3f7",
+        ],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff",
+        "circle-opacity": 0.85,
+      },
+    });
+
+    this.map.addLayer({
+      id: "news-signals-label",
+      type: "symbol",
+      source: "news-signals",
+      layout: {
+        "text-field": ["get", "label"],
+        "text-size": 9,
+        "text-offset": [0, 1.8],
+        "text-anchor": "top",
+        "text-max-width": 12,
+      },
+      paint: {
+        "text-color": "#e0e6f0",
+        "text-halo-color": "#000",
+        "text-halo-width": 1,
+      },
+      minzoom: 7,
+    });
+
+    this.addPopup("news-signals-circle", (props) =>
+      `<strong>${props.title}</strong><br/><em>${props.source}</em><br/>${props.region} &middot; ${props.time}`
+    );
+
+    this.fetchNewsSignals();
+    setInterval(() => this.fetchNewsSignals(), 120_000);
+  }
+
+  private async fetchNewsSignals(): Promise<void> {
+    if (!this.map) return;
+    try {
+      // Try backend geo endpoint first
+      let articles: { title: string; lat: number; lon: number; category: string; source: string; regionId: string; publishedAt: string | null }[] = [];
+
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news/geo`);
+        if (res.ok) {
+          const json = await res.json();
+          articles = (json.data || []).filter((a: { lat?: number; lon?: number }) => a.lat != null && a.lon != null);
+        }
+      } catch { /* fall through */ }
+
+      // Fallback: use regular news with location extraction
+      if (articles.length === 0) {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news?category=regional`);
+          if (res.ok) {
+            const json = await res.json();
+            articles = (json.data || []).filter((a: { lat?: number; lon?: number }) => a.lat != null && a.lon != null);
+          }
+        } catch { /* fall through */ }
+      }
+
+      const features: GeoJSON.Feature[] = articles.slice(0, 50).map((a) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
+        properties: {
+          title: a.title.length > 80 ? a.title.slice(0, 77) + "..." : a.title,
+          label: a.title.length > 30 ? a.title.slice(0, 27) + "..." : a.title,
+          source: a.source,
+          category: a.category,
+          region: a.regionId || "",
+          time: a.publishedAt ? new Date(a.publishedAt).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Manila" }) : "",
+        },
+      }));
+
+      const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+      const src = this.map.getSource("news-signals") as maplibregl.GeoJSONSource | undefined;
+      if (src) src.setData(geojson);
+    } catch {
+      // silently fail
+    }
+  }
+
   private startPulseAnimation(): void {
     if (!this.map) return;
     let phase = 0;
@@ -743,6 +845,7 @@ export class DeckGLMap {
       { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85 },
       { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85 },
       { id: "military-activity-circle", baseRadius: 6, baseOpacity: 0.9 },
+      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.85 },
     ];
     const animate = () => {
       if (!this.map) return;

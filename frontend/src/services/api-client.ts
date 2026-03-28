@@ -89,22 +89,45 @@ interface RSS2JSONResponse {
 
 const RSS2JSON_BASE = "https://api.rss2json.com/v1/api.json?rss_url=";
 
-const DIRECT_FEEDS = [
+interface DirectFeedConfig {
+  url: string;
+  name: string;
+  category: string;
+  tier: number;
+  regionId?: string;
+  lat?: number;
+  lon?: number;
+}
+
+const DIRECT_FEEDS: DirectFeedConfig[] = [
+  // National feeds
   { url: "https://news.google.com/rss/search?q=Philippines&hl=en-PH&gl=PH&ceid=PH:en", name: "Google News PH", category: "national-politics", tier: 4 },
   { url: "https://news.google.com/rss/search?q=%22West+Philippine+Sea%22&hl=en-PH&gl=PH&ceid=PH:en", name: "Google News WPS", category: "wps-maritime", tier: 4 },
   { url: "https://news.google.com/rss/search?q=typhoon+Philippines+PAGASA&hl=en-PH&gl=PH&ceid=PH:en", name: "Google News Typhoon", category: "disaster", tier: 4 },
   { url: "https://news.google.com/rss/search?q=Philippines+economy+peso+BSP&hl=en-PH&gl=PH&ceid=PH:en", name: "Google News Economy", category: "economy", tier: 4 },
   { url: "https://news.google.com/rss/search?q=Philippines+military+AFP+EDCA&hl=en-PH&gl=PH&ceid=PH:en", name: "Google News Military", category: "defense", tier: 4 },
   { url: "https://feeds.bbci.co.uk/news/world/asia/rss.xml", name: "BBC Asia", category: "national-politics", tier: 4 },
+  // Regional geo feeds
+  { url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Manila", category: "regional", tier: 4, regionId: "manila", lat: 14.5995, lon: 120.9842 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Cebu?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Cebu", category: "regional", tier: 4, regionId: "cebu", lat: 10.3157, lon: 123.8854 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Davao?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Davao", category: "regional", tier: 4, regionId: "davao", lat: 7.1907, lon: 125.4553 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Zamboanga?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Zamboanga", category: "regional", tier: 4, regionId: "zamboanga", lat: 6.9214, lon: 122.079 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Iloilo?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Iloilo", category: "regional", tier: 4, regionId: "iloilo", lat: 10.7202, lon: 122.5621 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Cagayan+de+Oro?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: CDO", category: "regional", tier: 4, regionId: "cdo", lat: 8.4542, lon: 124.6319 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Baguio?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Baguio", category: "regional", tier: 4, regionId: "baguio", lat: 16.4023, lon: 120.596 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Tacloban?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Tacloban", category: "regional", tier: 4, regionId: "tacloban", lat: 11.2543, lon: 124.96 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Palawan?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Palawan", category: "regional", tier: 4, regionId: "palawan", lat: 9.8349, lon: 118.7384 },
 ];
 
 let directNewsCache: { articles: NewsArticle[]; fetchedAt: number } | null = null;
 const DIRECT_CACHE_TTL = 120_000;
 
-async function fetchDirectNews(category?: string): Promise<NewsArticle[]> {
+async function fetchDirectNews(category?: string, regionId?: string): Promise<NewsArticle[]> {
   if (directNewsCache && Date.now() - directNewsCache.fetchedAt < DIRECT_CACHE_TTL) {
-    const cached = directNewsCache.articles;
-    return category ? cached.filter((a) => a.category === category) : cached;
+    let cached = directNewsCache.articles;
+    if (category) cached = cached.filter((a) => a.category === category);
+    if (regionId) cached = cached.filter((a) => a.regionId === regionId);
+    return cached;
   }
 
   const articles: NewsArticle[] = [];
@@ -133,6 +156,9 @@ async function fetchDirectNews(category?: string): Promise<NewsArticle[]> {
           fetchedAt: new Date().toISOString(),
           entities: [],
           sentiment: "neutral",
+          regionId: feed.regionId,
+          lat: feed.lat ?? null,
+          lon: feed.lon ?? null,
         });
       }
     } catch {
@@ -149,7 +175,10 @@ async function fetchDirectNews(category?: string): Promise<NewsArticle[]> {
   });
 
   directNewsCache = { articles, fetchedAt: Date.now() };
-  return category ? articles.filter((a) => a.category === category) : articles;
+  let result = articles;
+  if (category) result = result.filter((a) => a.category === category);
+  if (regionId) result = result.filter((a) => a.regionId === regionId);
+  return result;
 }
 
 async function fetchDirectEarthquakes(): Promise<Earthquake[]> {
@@ -238,25 +267,28 @@ function buildBaselineRegionScores(): RegionalStabilityScore[] {
 // ─── ApiClient ───
 
 export class ApiClient {
-  async getNews(category?: string): Promise<ApiResponse<NewsArticle[]>> {
-    const params = category ? `?category=${encodeURIComponent(category)}` : "";
+  async getNews(category?: string, regionId?: string): Promise<ApiResponse<NewsArticle[]>> {
+    const searchParams = new URLSearchParams();
+    if (category) searchParams.set("category", category);
+    if (regionId) searchParams.set("region", regionId);
+    const qs = searchParams.toString();
+    const path = `/api/news${qs ? `?${qs}` : ""}`;
     try {
-      const result = await fetchJson<NewsArticle[]>(`/api/news${params}`);
+      const result = await fetchJson<NewsArticle[]>(path);
       if (result.data.length > 0) return result;
     } catch { /* fall through to direct fetch */ }
 
     // Fallback: fetch directly from RSS feeds and GDELT
     try {
       const [rssArticles, gdeltArticles] = await Promise.allSettled([
-        fetchDirectNews(category),
-        category ? Promise.resolve([]) : fetchDirectGDELT(),
+        fetchDirectNews(category, regionId),
+        category || regionId ? Promise.resolve([]) : fetchDirectGDELT(),
       ]);
 
       const combined: NewsArticle[] = [];
       if (rssArticles.status === "fulfilled") combined.push(...rssArticles.value);
       if (gdeltArticles.status === "fulfilled") combined.push(...gdeltArticles.value);
 
-      // Deduplicate by title similarity
       const seen = new Set<string>();
       const deduped = combined.filter((a) => {
         const key = a.title.toLowerCase().slice(0, 60);
