@@ -420,14 +420,21 @@ export class DeckGLMap {
 
     this.map.addLayer({
       id: "military-activity-circle",
-      type: "circle",
+      type: "symbol",
       source: "military-activity",
+      layout: {
+        "text-field": "\u2708\uFE0E",
+        "text-size": 22,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+        "text-rotate": ["get", "heading"],
+        "text-font": ["Open Sans Bold"],
+      },
       paint: {
-        "circle-radius": 6,
-        "circle-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "#ef5350"],
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
-        "circle-opacity": 0.9,
+        "text-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
+        "text-halo-color": "#000",
+        "text-halo-width": 2,
+        "text-opacity": 0.95,
       },
     });
 
@@ -438,7 +445,7 @@ export class DeckGLMap {
       layout: {
         "text-field": ["get", "callsign"],
         "text-size": 9,
-        "text-offset": [0, 1.5],
+        "text-offset": [0, 2],
         "text-anchor": "top",
       },
       paint: { "text-color": "#ef5350", "text-halo-color": "#000", "text-halo-width": 1 },
@@ -446,7 +453,7 @@ export class DeckGLMap {
     });
 
     this.addPopup("military-activity-circle", (props) =>
-      `<strong>${props.callsign || "Unknown"}</strong><br/>Alt: ${props.altitude}ft<br/>${props.classification}`
+      `<strong>\u2708 ${props.callsign || "Unknown"}</strong><br/>Altitude: ${props.altitude} ft<br/>Classification: ${props.classification}<br/>Heading: ${props.heading}\u00B0`
     );
 
     this.fetchMilitaryFlights();
@@ -522,21 +529,27 @@ export class DeckGLMap {
 
     this.map.addLayer({
       id: "ship-traffic-circle",
-      type: "circle",
+      type: "symbol",
       source: "ship-traffic",
-      layout: { visibility: "none" },
+      layout: {
+        "text-field": "\u2693\uFE0E",
+        "text-size": 18,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+        "text-font": ["Open Sans Bold"],
+        visibility: "none",
+      },
       paint: {
-        "circle-radius": 4,
-        "circle-color": [
+        "text-color": [
           "match", ["get", "classification"],
           "ccg", "#ef5350", "plan", "#ef5350", "pafmm", "#ef5350",
           "ph-navy", "#4fc3f7", "ph-coast-guard", "#4fc3f7",
           "us-navy", "#4fc3f7",
           "#66bb6a",
         ],
-        "circle-stroke-width": 1,
-        "circle-stroke-color": "#fff",
-        "circle-opacity": 0.8,
+        "text-halo-color": "#000",
+        "text-halo-width": 2,
+        "text-opacity": 0.95,
       },
     });
 
@@ -547,7 +560,7 @@ export class DeckGLMap {
       layout: {
         "text-field": ["get", "name"],
         "text-size": 9,
-        "text-offset": [0, 1.3],
+        "text-offset": [0, 1.8],
         "text-anchor": "top",
         visibility: "none",
       },
@@ -556,7 +569,7 @@ export class DeckGLMap {
     });
 
     this.addPopup("ship-traffic-circle", (props) =>
-      `<strong>${props.name || "Unknown"}</strong><br/>${props.classification.toUpperCase()}<br/>${props.nearFeature || "Open sea"}`
+      `<strong>\u{1F6A2} ${props.name || "Unknown"}</strong><br/>Type: ${props.classification.toUpperCase()}<br/>Near: ${props.nearFeature || "Open sea"}`
     );
   }
 
@@ -845,40 +858,86 @@ export class DeckGLMap {
   private async fetchNewsSignals(): Promise<void> {
     if (!this.map) return;
     try {
-      // Try backend geo endpoint first
-      let articles: { title: string; lat: number; lon: number; category: string; source: string; regionId: string; publishedAt: string | null }[] = [];
+      interface GeoArticle { title: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null; url?: string }
+      let articles: GeoArticle[] = [];
 
+      // Try backend geo endpoint first
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news/geo`);
         if (res.ok) {
           const json = await res.json();
-          articles = (json.data || []).filter((a: { lat?: number; lon?: number }) => a.lat != null && a.lon != null);
+          articles = (json.data || []).filter((a: GeoArticle) => a.lat != null && a.lon != null);
         }
       } catch { /* fall through */ }
 
-      // Fallback: use regular news with location extraction
+      // Fallback: try regular news with region filter
       if (articles.length === 0) {
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news?category=regional`);
+          const res = await fetch(`${import.meta.env.VITE_API_URL || ""}/api/news`);
           if (res.ok) {
             const json = await res.json();
-            articles = (json.data || []).filter((a: { lat?: number; lon?: number }) => a.lat != null && a.lon != null);
+            articles = (json.data || []).filter((a: GeoArticle) => a.lat != null && a.lon != null);
           }
         } catch { /* fall through */ }
       }
 
-      const features: GeoJSON.Feature[] = articles.slice(0, 50).map((a) => ({
-        type: "Feature" as const,
-        geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
-        properties: {
-          title: a.title.length > 80 ? a.title.slice(0, 77) + "..." : a.title,
-          label: a.title.length > 30 ? a.title.slice(0, 27) + "..." : a.title,
-          source: a.source,
-          category: a.category,
-          region: a.regionId || "",
-          time: a.publishedAt ? new Date(a.publishedAt).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Manila" }) : "",
-        },
-      }));
+      // Fallback: fetch directly from Google News geo RSS feeds via rss2json
+      if (articles.length === 0) {
+        const geoFeeds = [
+          { url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", region: "manila", lat: 14.5995, lon: 120.9842 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Cebu?hl=en-PH&gl=PH&ceid=PH:en", region: "cebu", lat: 10.3157, lon: 123.8854 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Davao?hl=en-PH&gl=PH&ceid=PH:en", region: "davao", lat: 7.1907, lon: 125.4553 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Zamboanga?hl=en-PH&gl=PH&ceid=PH:en", region: "zamboanga", lat: 6.9214, lon: 122.079 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Iloilo?hl=en-PH&gl=PH&ceid=PH:en", region: "iloilo", lat: 10.7202, lon: 122.5621 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Cagayan+de+Oro?hl=en-PH&gl=PH&ceid=PH:en", region: "cdo", lat: 8.4542, lon: 124.6319 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Baguio?hl=en-PH&gl=PH&ceid=PH:en", region: "baguio", lat: 16.4023, lon: 120.596 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Tacloban?hl=en-PH&gl=PH&ceid=PH:en", region: "tacloban", lat: 11.2543, lon: 124.96 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Palawan?hl=en-PH&gl=PH&ceid=PH:en", region: "palawan", lat: 9.8349, lon: 118.7384 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Legazpi?hl=en-PH&gl=PH&ceid=PH:en", region: "legazpi", lat: 13.1391, lon: 123.7438 },
+          { url: "https://news.google.com/rss/headlines/section/geo/Pampanga?hl=en-PH&gl=PH&ceid=PH:en", region: "pampanga", lat: 15.0794, lon: 120.62 },
+          { url: "https://news.google.com/rss/headlines/section/geo/General+Santos?hl=en-PH&gl=PH&ceid=PH:en", region: "gensan", lat: 6.1164, lon: 125.1716 },
+        ];
+
+        const rss2json = "https://api.rss2json.com/v1/api.json?rss_url=";
+        const fetches = geoFeeds.map(async (feed) => {
+          try {
+            const res = await fetch(`${rss2json}${encodeURIComponent(feed.url)}`, { signal: AbortSignal.timeout(8_000) });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json.status !== "ok" || !json.items) return;
+            for (const item of json.items.slice(0, 3)) {
+              if (!item.title) continue;
+              articles.push({
+                title: item.title,
+                lat: feed.lat,
+                lon: feed.lon,
+                category: "regional",
+                source: `Local: ${feed.region.charAt(0).toUpperCase() + feed.region.slice(1)}`,
+                regionId: feed.region,
+                publishedAt: item.pubDate || null,
+              });
+            }
+          } catch { /* skip */ }
+        });
+        await Promise.allSettled(fetches);
+      }
+
+      const features: GeoJSON.Feature[] = articles
+        .filter((a): a is GeoArticle & { lat: number; lon: number } => a.lat != null && a.lon != null)
+        .slice(0, 60)
+        .map((a) => ({
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: [a.lon, a.lat] },
+          properties: {
+            title: a.title.length > 80 ? a.title.slice(0, 77) + "..." : a.title,
+            label: a.title.length > 30 ? a.title.slice(0, 27) + "..." : a.title,
+            source: a.source,
+            category: a.category,
+            region: a.regionId || "",
+            time: a.publishedAt ? new Date(a.publishedAt).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Manila" }) : "",
+            url: (a as GeoArticle & { url?: string }).url || "",
+          },
+        }));
 
       const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
       const src = this.map.getSource("news-signals") as maplibregl.GeoJSONSource | undefined;
@@ -891,30 +950,40 @@ export class DeckGLMap {
   private startPulseAnimation(): void {
     if (!this.map) return;
     let time = 0;
-    const pulseLayers = [
-      { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.025, phase: 0 },
-      { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.035, phase: 0.4 },
-      { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.02, phase: 0.7 },
-      { id: "military-activity-circle", baseRadius: 6, baseOpacity: 0.9, speed: 0.04, phase: 0.2 },
-      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.85, speed: 0.03, phase: 0.5 },
-      { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.015, phase: 0.8 },
-      { id: "weather-data-circle", baseRadius: 7, baseOpacity: 0.8, speed: 0.02, phase: 0.3 },
+    const circleLayers = [
+      { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.006, phase: 0 },
+      { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.008, phase: 0.4 },
+      { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.005, phase: 0.7 },
+      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.85, speed: 0.007, phase: 0.5 },
+      { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.004, phase: 0.8 },
+    ];
+    const symbolLayers = [
+      { id: "military-activity-circle", baseSize: 20, baseOpacity: 0.9, speed: 0.009, phase: 0.2 },
+      { id: "ship-traffic-circle", baseSize: 16, baseOpacity: 0.9, speed: 0.007, phase: 0.6 },
+      { id: "weather-data-circle", baseSize: 13, baseOpacity: 0.95, speed: 0.005, phase: 0.3 },
     ];
     const animate = () => {
       if (!this.map) return;
       time++;
 
-      for (const layer of pulseLayers) {
+      for (const layer of circleLayers) {
         const wave = Math.sin((time * layer.speed + layer.phase) * Math.PI * 2);
-        const scale = 1 + 0.3 * wave;
-        const opacityShift = 0.15 * wave;
+        const scale = 1 + 0.2 * wave;
+        const opacityShift = 0.1 * wave;
         try {
           this.map.setPaintProperty(layer.id, "circle-radius", layer.baseRadius * scale);
           this.map.setPaintProperty(layer.id, "circle-opacity", Math.max(0.4, layer.baseOpacity + opacityShift));
-        } catch {
-          // layer may not exist
-        }
+        } catch { /* layer may not exist */ }
       }
+
+      for (const layer of symbolLayers) {
+        const wave = Math.sin((time * layer.speed + layer.phase) * Math.PI * 2);
+        const opacityShift = 0.08 * wave;
+        try {
+          this.map.setPaintProperty(layer.id, "text-opacity", Math.max(0.5, layer.baseOpacity + opacityShift));
+        } catch { /* layer may not exist */ }
+      }
+
       requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
@@ -980,21 +1049,30 @@ export class DeckGLMap {
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("weather-data", { type: "geojson", data: emptyGeoJSON });
     this.map.addLayer({
-      id: "weather-data-circle", type: "circle", source: "weather-data",
+      id: "weather-data-circle", type: "symbol", source: "weather-data",
+      layout: {
+        "text-field": ["concat", ["get", "icon"], " ", ["get", "label"]],
+        "text-size": 13,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+        "text-font": ["Open Sans Bold"],
+      },
       paint: {
-        "circle-radius": 7, "circle-color": ["match", ["get", "severity"],
-          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#66bb6a"],
-        "circle-stroke-width": 2, "circle-stroke-color": "#fff", "circle-opacity": 0.8,
+        "text-color": ["match", ["get", "severity"],
+          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#fff"],
+        "text-halo-color": "rgba(0,0,0,0.8)",
+        "text-halo-width": 2,
+        "text-opacity": 0.95,
       },
     });
     this.map.addLayer({
       id: "weather-data-label", type: "symbol", source: "weather-data",
-      layout: { "text-field": ["get", "label"], "text-size": 10, "text-offset": [0, 1.8], "text-anchor": "top" },
-      paint: { "text-color": "#e0e6f0", "text-halo-color": "#000", "text-halo-width": 1 },
-      minzoom: 6,
+      layout: { "text-field": ["get", "condition"], "text-size": 9, "text-offset": [0, 1.5], "text-anchor": "top" },
+      paint: { "text-color": "#aaa", "text-halo-color": "#000", "text-halo-width": 1 },
+      minzoom: 7,
     });
     this.addPopup("weather-data-circle", (props) =>
-      `<strong>${props.city}</strong><br/>${props.condition}<br/>Temp: ${props.temp}&deg;C<br/>Wind: ${props.wind} km/h<br/>Humidity: ${props.humidity}%`
+      `<strong>${props.icon} ${props.city}</strong><br/>${props.condition}<br/>Temperature: ${props.temp}\u00B0C<br/>Wind: ${props.wind} km/h<br/>Humidity: ${props.humidity}%`
     );
     this.fetchWeatherData();
     setInterval(() => this.fetchWeatherData(), 900_000);
@@ -1016,35 +1094,44 @@ export class DeckGLMap {
       { name: "Pampanga", lat: 15.0794, lon: 120.62 },
       { name: "GenSan", lat: 6.1164, lon: 125.1716 },
     ];
-    try {
-      const lats = cities.map((c) => c.lat).join(",");
-      const lons = cities.map((c) => c.lon).join(",");
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m&timezone=Asia/Manila`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
-      if (!res.ok) return;
-      const data = await res.json();
-      const results = Array.isArray(data) ? data : [data];
-      const features: GeoJSON.Feature[] = [];
-      for (let i = 0; i < Math.min(results.length, cities.length); i++) {
-        const c = cities[i];
-        const current = results[i]?.current;
-        if (!current) continue;
-        const code = current.weathercode ?? 0;
+    const features: GeoJSON.Feature[] = [];
+
+    // Fetch each city individually for reliability
+    const fetches = cities.map(async (c) => {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=Asia/Manila`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        const current = data?.current;
+        if (!current) return;
+        const code = current.weather_code ?? current.weathercode ?? 0;
         const condition = WEATHER_CODES[code] || "Unknown";
         const temp = Math.round(current.temperature_2m ?? 0);
-        const wind = Math.round(current.windspeed_10m ?? 0);
+        const wind = Math.round(current.wind_speed_10m ?? current.windspeed_10m ?? 0);
         const humidity = Math.round(current.relative_humidity_2m ?? 0);
         let severity = "clear";
         if (code >= 95) severity = "storm";
         else if (code >= 61) severity = "rain";
         else if (temp >= 35) severity = "hot";
+        const iconMap: Record<string, string> = {
+          storm: "\u26C8", rain: "\u{1F327}", hot: "\u2600", clear: "\u26C5",
+        };
         features.push({
           type: "Feature", geometry: { type: "Point", coordinates: [c.lon, c.lat] },
-          properties: { city: c.name, label: `${temp}°C`, condition, temp: String(temp), wind: String(wind), humidity: String(humidity), severity },
+          properties: {
+            city: c.name, label: `${temp}\u00B0C`, condition,
+            temp: String(temp), wind: String(wind), humidity: String(humidity),
+            severity, icon: iconMap[severity] || "\u26C5",
+          },
         });
-      }
+      } catch { /* skip city */ }
+    });
+    await Promise.allSettled(fetches);
+
+    try {
       const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
-      const src = this.map.getSource("weather-data") as maplibregl.GeoJSONSource | undefined;
+      const src = this.map?.getSource("weather-data") as maplibregl.GeoJSONSource | undefined;
       if (src) src.setData(geojson);
     } catch { /* silently fail */ }
   }
