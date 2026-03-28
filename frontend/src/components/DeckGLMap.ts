@@ -423,17 +423,18 @@ export class DeckGLMap {
       type: "symbol",
       source: "military-activity",
       layout: {
-        "text-field": "\u2708",
-        "text-size": 20,
+        "text-field": "\u2708\uFE0E",
+        "text-size": 22,
         "text-allow-overlap": true,
         "text-ignore-placement": true,
         "text-rotate": ["get", "heading"],
+        "text-font": ["Open Sans Bold"],
       },
       paint: {
-        "text-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#aaa", "#ef5350"],
+        "text-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
         "text-halo-color": "#000",
-        "text-halo-width": 1,
-        "text-opacity": 0.9,
+        "text-halo-width": 2,
+        "text-opacity": 0.95,
       },
     });
 
@@ -531,10 +532,11 @@ export class DeckGLMap {
       type: "symbol",
       source: "ship-traffic",
       layout: {
-        "text-field": "\u{1F6A2}",
-        "text-size": 16,
+        "text-field": "\u2693\uFE0E",
+        "text-size": 18,
         "text-allow-overlap": true,
         "text-ignore-placement": true,
+        "text-font": ["Open Sans Bold"],
         visibility: "none",
       },
       paint: {
@@ -546,8 +548,8 @@ export class DeckGLMap {
           "#66bb6a",
         ],
         "text-halo-color": "#000",
-        "text-halo-width": 1,
-        "text-opacity": 0.9,
+        "text-halo-width": 2,
+        "text-opacity": 0.95,
       },
     });
 
@@ -949,16 +951,16 @@ export class DeckGLMap {
     if (!this.map) return;
     let time = 0;
     const circleLayers = [
-      { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.025, phase: 0 },
-      { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.035, phase: 0.4 },
-      { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.02, phase: 0.7 },
-      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.85, speed: 0.03, phase: 0.5 },
-      { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.015, phase: 0.8 },
-      { id: "weather-data-circle", baseRadius: 7, baseOpacity: 0.8, speed: 0.02, phase: 0.3 },
+      { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.006, phase: 0 },
+      { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.008, phase: 0.4 },
+      { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.005, phase: 0.7 },
+      { id: "news-signals-circle", baseRadius: 8, baseOpacity: 0.85, speed: 0.007, phase: 0.5 },
+      { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.004, phase: 0.8 },
     ];
     const symbolLayers = [
-      { id: "military-activity-circle", baseSize: 20, baseOpacity: 0.9, speed: 0.04, phase: 0.2 },
-      { id: "ship-traffic-circle", baseSize: 16, baseOpacity: 0.9, speed: 0.03, phase: 0.6 },
+      { id: "military-activity-circle", baseSize: 20, baseOpacity: 0.9, speed: 0.009, phase: 0.2 },
+      { id: "ship-traffic-circle", baseSize: 16, baseOpacity: 0.9, speed: 0.007, phase: 0.6 },
+      { id: "weather-data-circle", baseSize: 13, baseOpacity: 0.95, speed: 0.005, phase: 0.3 },
     ];
     const animate = () => {
       if (!this.map) return;
@@ -966,8 +968,8 @@ export class DeckGLMap {
 
       for (const layer of circleLayers) {
         const wave = Math.sin((time * layer.speed + layer.phase) * Math.PI * 2);
-        const scale = 1 + 0.3 * wave;
-        const opacityShift = 0.15 * wave;
+        const scale = 1 + 0.2 * wave;
+        const opacityShift = 0.1 * wave;
         try {
           this.map.setPaintProperty(layer.id, "circle-radius", layer.baseRadius * scale);
           this.map.setPaintProperty(layer.id, "circle-opacity", Math.max(0.4, layer.baseOpacity + opacityShift));
@@ -976,7 +978,7 @@ export class DeckGLMap {
 
       for (const layer of symbolLayers) {
         const wave = Math.sin((time * layer.speed + layer.phase) * Math.PI * 2);
-        const opacityShift = 0.12 * wave;
+        const opacityShift = 0.08 * wave;
         try {
           this.map.setPaintProperty(layer.id, "text-opacity", Math.max(0.5, layer.baseOpacity + opacityShift));
         } catch { /* layer may not exist */ }
@@ -1047,21 +1049,30 @@ export class DeckGLMap {
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("weather-data", { type: "geojson", data: emptyGeoJSON });
     this.map.addLayer({
-      id: "weather-data-circle", type: "circle", source: "weather-data",
+      id: "weather-data-circle", type: "symbol", source: "weather-data",
+      layout: {
+        "text-field": ["concat", ["get", "icon"], " ", ["get", "label"]],
+        "text-size": 13,
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+        "text-font": ["Open Sans Bold"],
+      },
       paint: {
-        "circle-radius": 7, "circle-color": ["match", ["get", "severity"],
-          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#66bb6a"],
-        "circle-stroke-width": 2, "circle-stroke-color": "#fff", "circle-opacity": 0.8,
+        "text-color": ["match", ["get", "severity"],
+          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#fff"],
+        "text-halo-color": "rgba(0,0,0,0.8)",
+        "text-halo-width": 2,
+        "text-opacity": 0.95,
       },
     });
     this.map.addLayer({
       id: "weather-data-label", type: "symbol", source: "weather-data",
-      layout: { "text-field": ["get", "label"], "text-size": 10, "text-offset": [0, 1.8], "text-anchor": "top" },
-      paint: { "text-color": "#e0e6f0", "text-halo-color": "#000", "text-halo-width": 1 },
-      minzoom: 6,
+      layout: { "text-field": ["get", "condition"], "text-size": 9, "text-offset": [0, 1.5], "text-anchor": "top" },
+      paint: { "text-color": "#aaa", "text-halo-color": "#000", "text-halo-width": 1 },
+      minzoom: 7,
     });
     this.addPopup("weather-data-circle", (props) =>
-      `<strong>${props.city}</strong><br/>${props.condition}<br/>Temp: ${props.temp}&deg;C<br/>Wind: ${props.wind} km/h<br/>Humidity: ${props.humidity}%`
+      `<strong>${props.icon} ${props.city}</strong><br/>${props.condition}<br/>Temperature: ${props.temp}\u00B0C<br/>Wind: ${props.wind} km/h<br/>Humidity: ${props.humidity}%`
     );
     this.fetchWeatherData();
     setInterval(() => this.fetchWeatherData(), 900_000);
@@ -1083,35 +1094,44 @@ export class DeckGLMap {
       { name: "Pampanga", lat: 15.0794, lon: 120.62 },
       { name: "GenSan", lat: 6.1164, lon: 125.1716 },
     ];
-    try {
-      const lats = cities.map((c) => c.lat).join(",");
-      const lons = cities.map((c) => c.lon).join(",");
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m&timezone=Asia/Manila`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
-      if (!res.ok) return;
-      const data = await res.json();
-      const results = Array.isArray(data) ? data : [data];
-      const features: GeoJSON.Feature[] = [];
-      for (let i = 0; i < Math.min(results.length, cities.length); i++) {
-        const c = cities[i];
-        const current = results[i]?.current;
-        if (!current) continue;
-        const code = current.weathercode ?? 0;
+    const features: GeoJSON.Feature[] = [];
+
+    // Fetch each city individually for reliability
+    const fetches = cities.map(async (c) => {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=Asia/Manila`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        const current = data?.current;
+        if (!current) return;
+        const code = current.weather_code ?? current.weathercode ?? 0;
         const condition = WEATHER_CODES[code] || "Unknown";
         const temp = Math.round(current.temperature_2m ?? 0);
-        const wind = Math.round(current.windspeed_10m ?? 0);
+        const wind = Math.round(current.wind_speed_10m ?? current.windspeed_10m ?? 0);
         const humidity = Math.round(current.relative_humidity_2m ?? 0);
         let severity = "clear";
         if (code >= 95) severity = "storm";
         else if (code >= 61) severity = "rain";
         else if (temp >= 35) severity = "hot";
+        const iconMap: Record<string, string> = {
+          storm: "\u26C8", rain: "\u{1F327}", hot: "\u2600", clear: "\u26C5",
+        };
         features.push({
           type: "Feature", geometry: { type: "Point", coordinates: [c.lon, c.lat] },
-          properties: { city: c.name, label: `${temp}°C`, condition, temp: String(temp), wind: String(wind), humidity: String(humidity), severity },
+          properties: {
+            city: c.name, label: `${temp}\u00B0C`, condition,
+            temp: String(temp), wind: String(wind), humidity: String(humidity),
+            severity, icon: iconMap[severity] || "\u26C5",
+          },
         });
-      }
+      } catch { /* skip city */ }
+    });
+    await Promise.allSettled(fetches);
+
+    try {
       const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
-      const src = this.map.getSource("weather-data") as maplibregl.GeoJSONSource | undefined;
+      const src = this.map?.getSource("weather-data") as maplibregl.GeoJSONSource | undefined;
       if (src) src.setData(geojson);
     } catch { /* silently fail */ }
   }
