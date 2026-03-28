@@ -322,7 +322,7 @@ export class DeckGLMap {
       },
     });
 
-    this.addPopup("fault-lines-circle", (props) =>
+    this.addPopup("fault-lines-line", (props) =>
       `<strong>${props.name}</strong><br/>${props.region}`
     );
   }
