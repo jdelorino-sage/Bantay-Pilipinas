@@ -92,20 +92,28 @@ export function startScheduler(): void {
   console.log("[scheduler] All cron jobs registered");
 
   // Initial scrape on startup (don't wait for first cron tick)
-  setTimeout(() => {
+  setTimeout(async () => {
     console.log("[scheduler] Running initial scrape...");
-    runWithStatus("rss", () => runAggregator(PH_FEEDS));
-    runWithStatus("phivolcs", async () => {
-      await scrapePHIVOLCS();
-      await scrapeVolcanoStatus();
-      await fetchUSGSEarthquakes();
-    });
-    runWithStatus("pagasa", async () => {
-      await scrapePAGASA();
-    });
-    runWithStatus("weather", () => scrapeWeatherAdvisories());
-    runWithStatus("bsp", () => scrapeBSP());
-    runWithStatus("gdelt", () => fetchGDELT());
-    runWithStatus("scores", () => runScoreComputation());
+    // Run RSS and GDELT first (most visible to users)
+    await Promise.allSettled([
+      runWithStatus("rss", () => runAggregator(PH_FEEDS)),
+      runWithStatus("gdelt", () => fetchGDELT()),
+    ]);
+    // Then disaster data sources
+    await Promise.allSettled([
+      runWithStatus("phivolcs", async () => {
+        await scrapePHIVOLCS();
+        await scrapeVolcanoStatus();
+        await fetchUSGSEarthquakes();
+      }),
+      runWithStatus("pagasa", async () => {
+        await scrapePAGASA();
+      }),
+      runWithStatus("weather", () => scrapeWeatherAdvisories()),
+      runWithStatus("bsp", () => scrapeBSP()),
+    ]);
+    // Finally compute scores after data is available
+    await runWithStatus("scores", () => runScoreComputation());
+    console.log("[scheduler] Initial scrape complete");
   }, 3_000);
 }

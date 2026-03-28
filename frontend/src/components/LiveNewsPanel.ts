@@ -9,10 +9,10 @@ interface LiveChannel {
 }
 
 const LIVE_CHANNELS: LiveChannel[] = [
-  { id: "abs-cbn", name: "ABS-CBN", ytChannel: "UCstEtN1GBximQ0ZMy2FE0dA", liveVideoId: "cEFSANcb430" },
-  { id: "gma", name: "GMA", ytChannel: "UCVPbYEWwYOH5jm6Bvi0XkYg", liveVideoId: "4aHDBsg68Wc" },
+  { id: "abs-cbn", name: "ABS-CBN", ytChannel: "UCstEtN1GBximQ0ZMy2FE0dA" },
+  { id: "gma", name: "GMA", ytChannel: "UCVPbYEWwYOH5jm6Bvi0XkYg" },
   { id: "cnn-ph", name: "CNN PH", ytChannel: "UCeEj9SKvxkOTkmGmFSMredQ" },
-  { id: "ptv", name: "PTV", ytChannel: "UCm1oP_sg26QBKAC4UGFjMhA", liveVideoId: "2EmkF-Mxm1s" },
+  { id: "ptv", name: "PTV", ytChannel: "UCm1oP_sg26QBKAC4UGFjMhA" },
   { id: "rappler", name: "RAPPLER", ytChannel: "UCiNfMdFmMnMHFGNRsaRwISA" },
 ];
 
@@ -20,7 +20,23 @@ function buildEmbedUrl(channel: LiveChannel): string {
   if (channel.liveVideoId) {
     return `https://www.youtube.com/embed/${channel.liveVideoId}?autoplay=1&mute=1&rel=0`;
   }
+  // Use the live_stream embed (works for channels that are currently streaming)
   return `https://www.youtube.com/embed/live_stream?channel=${channel.ytChannel}&autoplay=1&mute=1`;
+}
+
+async function fetchLatestVideoId(channelId: string): Promise<string | null> {
+  try {
+    const rssUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`)}`;
+    const res = await fetch(rssUrl, { signal: AbortSignal.timeout(8_000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json.status !== "ok" || !json.items?.[0]?.link) return null;
+    const videoUrl = json.items[0].link as string;
+    const match = videoUrl.match(/[?&]v=([^&]+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 export class LiveNewsPanel {
@@ -112,15 +128,21 @@ export class LiveNewsPanel {
     const fallback = el.querySelector<HTMLElement>("#video-fallback");
     if (!iframe || !fallback) return;
 
-    const timer = setTimeout(() => {
-      if (!this.iframeLoadFailed) {
-        this.iframeLoadFailed = true;
-        if (!this.activeChannel.liveVideoId) {
-          iframe.classList.add("hidden");
-          fallback.classList.remove("hidden");
-        }
+    const timer = setTimeout(async () => {
+      if (this.iframeLoadFailed) return;
+      this.iframeLoadFailed = true;
+
+      // Try to get the latest video from the channel as fallback
+      const videoId = await fetchLatestVideoId(this.activeChannel.ytChannel);
+      if (videoId) {
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0`;
+        iframe.classList.remove("hidden");
+        fallback.classList.add("hidden");
+      } else {
+        iframe.classList.add("hidden");
+        fallback.classList.remove("hidden");
       }
-    }, 10_000);
+    }, 8_000);
 
     iframe.addEventListener("load", () => {
       clearTimeout(timer);
