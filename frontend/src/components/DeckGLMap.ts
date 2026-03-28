@@ -26,9 +26,9 @@ const LAYER_GROUPS: Record<string, LayerGroup> = {
   "weather-systems": { sourceId: "weather-systems", layerIds: ["weather-systems-circle", "weather-systems-label"] },
   "intel-hotspots": { sourceId: "intel-hotspots", layerIds: ["intel-hotspots-circle", "intel-hotspots-label"] },
   "conflict-zones": { sourceId: "conflict-zones", layerIds: ["conflict-zones-fill"] },
-  "news-signals": { sourceId: "news-signals", layerIds: ["news-signals-glow", "news-signals-circle", "news-signals-count"] },
+  "news-signals": { sourceId: "news-clusters", layerIds: ["news-cluster-glow", "news-cluster-circle", "news-cluster-count", "news-dot-circle"] },
   "oil-depots": { sourceId: "oil-depots", layerIds: ["oil-depots-circle", "oil-depots-label"] },
-  "weather-data": { sourceId: "weather-data", layerIds: ["weather-data-circle", "weather-data-label"] },
+  "weather-data": { sourceId: "weather-data", layerIds: ["weather-data-bg", "weather-data-circle", "weather-data-label"] },
   "eez-boundary": { sourceId: "eez-boundary", layerIds: ["eez-boundary-line"] },
   "shipping-lanes": { sourceId: "shipping-lanes", layerIds: ["shipping-lanes-line", "shipping-lanes-label"] },
   "flood-zones": { sourceId: "flood-zones", layerIds: ["flood-zones-fill"] },
@@ -847,90 +847,83 @@ export class DeckGLMap {
     if (!this.map) return;
 
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
-    this.map.addSource("news-signals", { type: "geojson", data: emptyGeoJSON });
 
-    // World Monitor style: outer glow ring (size scales with article count)
+    // Source for city-level clusters
+    this.map.addSource("news-clusters", { type: "geojson", data: emptyGeoJSON });
+    // Source for individual article dots
+    this.map.addSource("news-dots", { type: "geojson", data: emptyGeoJSON });
+
+    // City cluster: outer glow ring
     this.map.addLayer({
-      id: "news-signals-glow",
-      type: "circle",
-      source: "news-signals",
+      id: "news-cluster-glow", type: "circle", source: "news-clusters",
       paint: {
         "circle-radius": ["interpolate", ["linear"], ["get", "count"], 1, 18, 3, 25, 6, 32, 10, 40],
-        "circle-color": [
-          "match", ["get", "category"],
-          "disaster", "#ef5350", "wps-maritime", "#ffa726",
-          "defense", "#ab47bc", "crime", "#ef5350",
-          "economy", "#66bb6a", "regional", "#ffa726",
-          "#4fc3f7",
-        ],
-        "circle-opacity": 0.18,
-        "circle-blur": 0.8,
+        "circle-color": ["match", ["get", "category"],
+          "disaster", "#ef5350", "wps-maritime", "#ffa726", "defense", "#ab47bc",
+          "crime", "#ef5350", "economy", "#66bb6a", "regional", "#ffa726", "#4fc3f7"],
+        "circle-opacity": 0.18, "circle-blur": 0.8,
       },
     });
 
-    // Inner solid dot (size scales with count)
+    // City cluster: inner solid dot
     this.map.addLayer({
-      id: "news-signals-circle",
-      type: "circle",
-      source: "news-signals",
+      id: "news-cluster-circle", type: "circle", source: "news-clusters",
       paint: {
         "circle-radius": ["interpolate", ["linear"], ["get", "count"], 1, 8, 3, 11, 6, 14, 10, 18],
-        "circle-color": [
-          "match", ["get", "category"],
-          "disaster", "#ef5350", "wps-maritime", "#ffa726",
-          "defense", "#ab47bc", "crime", "#ef5350",
-          "economy", "#66bb6a", "regional", "#ffa726",
-          "#4fc3f7",
-        ],
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "rgba(255,255,255,0.6)",
-        "circle-opacity": 0.85,
+        "circle-color": ["match", ["get", "category"],
+          "disaster", "#ef5350", "wps-maritime", "#ffa726", "defense", "#ab47bc",
+          "crime", "#ef5350", "economy", "#66bb6a", "regional", "#ffa726", "#4fc3f7"],
+        "circle-stroke-width": 2, "circle-stroke-color": "rgba(255,255,255,0.6)", "circle-opacity": 0.85,
       },
     });
 
-    // Count badge (shows article count per city)
+    // City cluster: count badge
     this.map.addLayer({
-      id: "news-signals-count",
-      type: "symbol",
-      source: "news-signals",
-      layout: {
-        "text-field": ["to-string", ["get", "count"]],
-        "text-size": 11,
-        "text-font": ["Open Sans Bold"],
-        "text-allow-overlap": true,
-        "text-ignore-placement": true,
-      },
-      paint: {
-        "text-color": "#fff",
-        "text-halo-color": "rgba(0,0,0,0.5)",
-        "text-halo-width": 1,
-      },
+      id: "news-cluster-count", type: "symbol", source: "news-clusters",
+      layout: { "text-field": ["to-string", ["get", "count"]], "text-size": 11,
+        "text-font": ["Open Sans Bold"], "text-allow-overlap": true, "text-ignore-placement": true },
+      paint: { "text-color": "#fff", "text-halo-color": "rgba(0,0,0,0.5)", "text-halo-width": 1 },
     });
 
-    this.addPopup("news-signals-circle", (props) => {
+    // Individual article dots (small, scattered around city with jitter)
+    this.map.addLayer({
+      id: "news-dot-circle", type: "circle", source: "news-dots",
+      paint: {
+        "circle-radius": 5,
+        "circle-color": ["match", ["get", "category"],
+          "disaster", "#ef5350", "wps-maritime", "#ffa726", "defense", "#ab47bc",
+          "crime", "#ef5350", "economy", "#66bb6a", "regional", "#ffa726", "#4fc3f7"],
+        "circle-stroke-width": 1.5, "circle-stroke-color": "#fff", "circle-opacity": 0.9,
+      },
+      minzoom: 7,
+    });
+
+    this.addPopup("news-cluster-circle", (props) => {
       const headlines = props.headlines ? props.headlines.split("|||").slice(0, 5) : [props.title];
       const headlineHtml = headlines.map((h: string) => `<div style="margin:2px 0;font-size:11px;">&bull; ${h}</div>`).join("");
       return `<strong>${props.region.toUpperCase()} (${props.count} articles)</strong><br/>${headlineHtml}`;
     });
 
+    this.addPopup("news-dot-circle", (props) =>
+      `<strong>${props.title}</strong><br/><em>${props.source}</em><br/>${props.region.toUpperCase()}`
+    );
+
     this.fetchNewsSignals();
-    setInterval(() => this.fetchNewsSignals(), 120_000);
+    setInterval(() => this.fetchNewsSignals(), 60_000);
   }
 
   private async fetchNewsSignals(): Promise<void> {
     if (!this.map) return;
     try {
-      // Use ApiClient which has proper fallback chain (rss2json, GDELT, caching)
       const response = this.api
         ? await this.api.getNews()
         : { data: [] as { title: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null }[] };
 
       const geoArticles = response.data.filter((a) => a.lat != null && a.lon != null);
-      console.log(`[news-signals] Got ${response.data.length} articles, ${geoArticles.length} with geo coords`);
+      console.log(`[news-signals] ${response.data.length} articles, ${geoArticles.length} geo-tagged`);
 
-      // Cluster articles by regionId (World Monitor style - one dot per city with count)
+      // Build city clusters
       const clusters = new Map<string, { lat: number; lon: number; count: number; category: string; region: string; headlines: string[] }>();
-
       for (const a of geoArticles) {
         const key = a.regionId || `${a.lat}_${a.lon}`;
         const existing = clusters.get(key);
@@ -938,32 +931,32 @@ export class DeckGLMap {
           existing.count++;
           if (existing.headlines.length < 8) existing.headlines.push(a.title);
         } else {
-          clusters.set(key, {
-            lat: a.lat!, lon: a.lon!,
-            count: 1, category: a.category,
-            region: a.regionId || key,
-            headlines: [a.title],
-          });
+          clusters.set(key, { lat: a.lat!, lon: a.lon!, count: 1, category: a.category, region: a.regionId || key, headlines: [a.title] });
         }
       }
 
-      const features: GeoJSON.Feature[] = [...clusters.values()].map((c) => ({
+      // Cluster features (one per city)
+      const clusterFeatures: GeoJSON.Feature[] = [...clusters.values()].map((c) => ({
         type: "Feature" as const,
         geometry: { type: "Point" as const, coordinates: [c.lon, c.lat] },
-        properties: {
-          count: c.count,
-          category: c.category,
-          region: c.region,
-          title: c.headlines[0] || "",
-          headlines: c.headlines.join("|||"),
-        },
+        properties: { count: c.count, category: c.category, region: c.region, title: c.headlines[0] || "", headlines: c.headlines.join("|||") },
       }));
 
-      console.log(`[news-signals] Plotting ${features.length} clustered city dots on map`);
+      // Individual article dots (with jitter around city center)
+      const jitter = () => (Math.random() - 0.5) * 0.12;
+      const dotFeatures: GeoJSON.Feature[] = geoArticles.slice(0, 80).map((a) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [a.lon! + jitter(), a.lat! + jitter()] },
+        properties: { title: a.title, source: a.source, category: a.category, region: a.regionId || "" },
+      }));
 
-      const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
-      const src = this.map.getSource("news-signals") as maplibregl.GeoJSONSource | undefined;
-      if (src) src.setData(geojson);
+      console.log(`[news-signals] Plotting ${clusterFeatures.length} clusters + ${dotFeatures.length} dots`);
+
+      const clusterSrc = this.map.getSource("news-clusters") as maplibregl.GeoJSONSource | undefined;
+      if (clusterSrc) clusterSrc.setData({ type: "FeatureCollection", features: clusterFeatures });
+
+      const dotSrc = this.map.getSource("news-dots") as maplibregl.GeoJSONSource | undefined;
+      if (dotSrc) dotSrc.setData({ type: "FeatureCollection", features: dotFeatures });
     } catch (err) {
       console.warn("[news-signals] Failed:", err);
     }
@@ -976,7 +969,7 @@ export class DeckGLMap {
       { id: "wps-features-circle", baseRadius: 7, baseOpacity: 0.85, speed: 0.006, phase: 0 },
       { id: "volcanoes-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.008, phase: 0.4 },
       { id: "intel-hotspots-circle", baseRadius: 6, baseOpacity: 0.85, speed: 0.005, phase: 0.7 },
-      { id: "news-signals-glow", baseRadius: 25, baseOpacity: 0.15, speed: 0.007, phase: 0.5 },
+      { id: "news-dot-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.007, phase: 0.5 },
       { id: "oil-depots-circle", baseRadius: 6, baseOpacity: 0.80, speed: 0.004, phase: 0.8 },
       { id: "military-activity-circle", baseRadius: 5, baseOpacity: 0.85, speed: 0.009, phase: 0.2 },
       { id: "ship-traffic-circle", baseRadius: 4, baseOpacity: 0.85, speed: 0.007, phase: 0.6 },
@@ -1059,28 +1052,50 @@ export class DeckGLMap {
     if (!this.map) return;
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("weather-data", { type: "geojson", data: emptyGeoJSON });
+
+    // Background circle for visibility
+    this.map.addLayer({
+      id: "weather-data-bg", type: "circle", source: "weather-data",
+      paint: {
+        "circle-radius": 18,
+        "circle-color": ["match", ["get", "severity"],
+          "storm", "rgba(239,83,80,0.25)", "rain", "rgba(66,165,245,0.25)",
+          "hot", "rgba(255,112,67,0.2)", "rgba(102,187,106,0.15)"],
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": ["match", ["get", "severity"],
+          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#66bb6a"],
+        "circle-opacity": 0.9,
+      },
+    });
+
+    // Temperature text
     this.map.addLayer({
       id: "weather-data-circle", type: "symbol", source: "weather-data",
       layout: {
-        "text-field": ["concat", ["get", "icon"], " ", ["get", "label"]],
-        "text-size": 13,
+        "text-field": ["get", "label"],
+        "text-size": 12,
         "text-allow-overlap": true,
         "text-ignore-placement": true,
         "text-font": ["Open Sans Bold"],
       },
       paint: {
-        "text-color": ["match", ["get", "severity"],
-          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#fff"],
-        "text-halo-color": "rgba(0,0,0,0.8)",
-        "text-halo-width": 2,
-        "text-opacity": 0.95,
+        "text-color": "#fff",
+        "text-halo-color": ["match", ["get", "severity"],
+          "storm", "#ef5350", "rain", "#42a5f5", "hot", "#ff7043", "#333"],
+        "text-halo-width": 1.5,
       },
     });
+
+    // Condition text below
     this.map.addLayer({
       id: "weather-data-label", type: "symbol", source: "weather-data",
-      layout: { "text-field": ["get", "condition"], "text-size": 9, "text-offset": [0, 1.5], "text-anchor": "top" },
-      paint: { "text-color": "#aaa", "text-halo-color": "#000", "text-halo-width": 1 },
-      minzoom: 7,
+      layout: {
+        "text-field": ["get", "condition"],
+        "text-size": 9, "text-offset": [0, 2.2], "text-anchor": "top",
+        "text-font": ["Open Sans Regular"],
+      },
+      paint: { "text-color": "#ccc", "text-halo-color": "#000", "text-halo-width": 1 },
+      minzoom: 6,
     });
     this.addPopup("weather-data-circle", (props) =>
       `<strong>${props.icon} ${props.city}</strong><br/>${props.condition}<br/>Temperature: ${props.temp}\u00B0C<br/>Wind: ${props.wind} km/h<br/>Humidity: ${props.humidity}%`

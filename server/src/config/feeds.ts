@@ -69,6 +69,12 @@ export const PH_FEEDS: FeedConfig[] = [
   // ── Fuel/Energy ──
   { id: "gnews-fuel", name: "Google News Fuel PH", url: "https://news.google.com/rss/search?q=Philippines+fuel+price+diesel+gasoline+DOE&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
 
+  // ── Military & Insurgent Alerts ──
+  { id: "gnews-npa", name: "Google News NPA", url: "https://news.google.com/rss/search?q=NPA+Philippines+insurgent+communist&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
+  { id: "gnews-abu-sayyaf", name: "Google News Abu Sayyaf", url: "https://news.google.com/rss/search?q=Abu+Sayyaf+Sulu+Basilan+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
+  { id: "gnews-barmm-peace", name: "Google News BARMM", url: "https://news.google.com/rss/search?q=BARMM+Bangsamoro+peace+Mindanao&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "defense" },
+  { id: "gnews-afp-ops", name: "Google News AFP Operations", url: "https://news.google.com/rss/search?q=AFP+operations+military+Philippines+encounter&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "defense" },
+
   // ── Regional: Google News Geo RSS per city ──
   { id: "gnews-geo-manila", name: "Local: Manila", url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "manila", location: { lat: 14.5995, lon: 120.9842 } },
   { id: "gnews-geo-cebu", name: "Local: Cebu", url: "https://news.google.com/rss/headlines/section/geo/Cebu?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "cebu", location: { lat: 10.3157, lon: 123.8854 } },

@@ -28,7 +28,7 @@ interface RefreshablePanel {
   refresh(): void;
 }
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 30_000;
 
 export class App {
   private container: HTMLElement;
@@ -79,6 +79,7 @@ export class App {
           <span class="status-indicator live" id="connection-status">
             <span class="status-dot"></span> LIVE
           </span>
+          <span class="refresh-indicator" id="refresh-indicator" title="Next refresh"></span>
           <span class="alert-level" id="alert-level">
             <span class="alert-label">ALERT</span>
             <span class="alert-value" id="alert-value">1</span>
@@ -99,6 +100,7 @@ export class App {
           <button class="view-toggle" id="btn-3d">3D</button>
         </div>
       </div>
+      <div id="ticker-container"></div>
       <main class="app-main">
         <div id="layer-sidebar-container"></div>
         <div class="map-area">
@@ -107,7 +109,6 @@ export class App {
         </div>
         <div class="right-panels" id="right-panels"></div>
       </main>
-      <div id="ticker-container"></div>
     `;
     this.container.appendChild(layout);
   }
@@ -315,12 +316,29 @@ export class App {
   private startPolling(): void {
     this.checkHealth();
     this.updateAlertLevel();
+
+    let countdown = POLL_INTERVAL_MS / 1000;
+    const indicatorEl = document.getElementById("refresh-indicator");
+
+    const updateIndicator = () => {
+      if (indicatorEl) indicatorEl.textContent = `${countdown}s`;
+      countdown--;
+      if (countdown < 0) countdown = POLL_INTERVAL_MS / 1000;
+    };
+    updateIndicator();
+    setInterval(updateIndicator, 1000);
+
     setInterval(() => {
+      if (indicatorEl) {
+        indicatorEl.classList.add("refreshing");
+        setTimeout(() => indicatorEl.classList.remove("refreshing"), 1500);
+      }
       for (const panel of this.panelInstances) {
         panel.refresh();
       }
       this.checkHealth();
       this.updateAlertLevel();
+      countdown = POLL_INTERVAL_MS / 1000;
     }, POLL_INTERVAL_MS);
   }
 
