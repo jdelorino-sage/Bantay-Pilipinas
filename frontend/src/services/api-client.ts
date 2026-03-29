@@ -135,6 +135,11 @@ const DIRECT_FEEDS: DirectFeedConfig[] = [
   { url: "https://news.google.com/rss/search?q=BFP+Philippines+fire+incident+blaze&hl=en-PH&gl=PH&ceid=PH:en", name: "BFP Fire Reports", category: "disaster", tier: 4 },
   { url: "https://news.google.com/rss/search?q=Philippines+government+executive+order+proclamation&hl=en-PH&gl=PH&ceid=PH:en", name: "PH Govt Orders", category: "national-politics", tier: 4 },
   { url: "https://news.google.com/rss/search?q=Philippines+trending+viral&hl=en-PH&gl=PH&ceid=PH:en", name: "PH Trending", category: "national-politics", tier: 4 },
+  // X/Twitter government accounts via RSSHub
+  { url: "https://rsshub.app/twitter/user/pnagovph", name: "X: PNA", category: "national-politics", tier: 2 },
+  { url: "https://rsshub.app/twitter/user/DFAPHL", name: "X: DFA", category: "national-politics", tier: 2 },
+  { url: "https://rsshub.app/twitter/user/TeamAFP", name: "X: AFP", category: "defense", tier: 2 },
+  { url: "https://rsshub.app/twitter/user/ABORDO_NDRRMC", name: "X: NDRRMC", category: "disaster", tier: 2 },
 ];
 
 let directNewsCache: { articles: NewsArticle[]; fetchedAt: number } | null = null;

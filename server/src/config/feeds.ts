@@ -165,7 +165,7 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "dpwh-feed", name: "DPWH", url: "https://www.dpwh.gov.ph/feed/", tier: 1, category: "national-politics" },
   { id: "dilg-feed", name: "DILG", url: "https://www.dilg.gov.ph/feed/", tier: 1, category: "national-politics" },
   { id: "sc-feed", name: "Supreme Court", url: "https://sc.judiciary.gov.ph/feed/", tier: 1, category: "national-politics" },
-  { id: "senate-feed", name: "Senate Press", url: "https://www.senate.gov.ph/rss/press_release.xml", tier: 1, category: "national-politics" },
+  { id: "senate-feed", name: "Senate Press", url: "https://legacy.senate.gov.ph/rss/rss_news.aspx", tier: 1, category: "national-politics" },
 
   // ── Bureau of Fire Protection & Emergency Services ──
   { id: "gnews-bfp", name: "BFP Fire Reports", url: "https://news.google.com/rss/search?q=BFP+%22Bureau+of+Fire+Protection%22+Philippines+fire+incident&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
@@ -176,6 +176,19 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "gnews-marcos-admin", name: "Marcos Admin", url: "https://news.google.com/rss/search?q=Marcos+Philippines+president+signed+approved&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
   { id: "gnews-congress", name: "Congress Bills", url: "https://news.google.com/rss/search?q=Philippines+Congress+Senate+bill+passed+approved+law&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
   { id: "gnews-comelec", name: "COMELEC Elections", url: "https://news.google.com/rss/search?q=COMELEC+Philippines+election+candidates+voting&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+
+  // ── X/Twitter Government Accounts (via RSSHub proxy) ──
+  { id: "x-pnagovph", name: "X: PNA Gov PH", url: "https://rsshub.app/twitter/user/pnagovph", tier: 2, category: "national-politics" },
+  { id: "x-govph", name: "X: Official Gazette", url: "https://rsshub.app/twitter/user/govph", tier: 2, category: "national-politics" },
+  { id: "x-dfaphl", name: "X: DFA Philippines", url: "https://rsshub.app/twitter/user/DFAPHL", tier: 2, category: "national-politics" },
+  { id: "x-dilg", name: "X: DILG", url: "https://rsshub.app/twitter/user/DILGPhilippines", tier: 2, category: "national-politics" },
+  { id: "x-teamafp", name: "X: Armed Forces PH", url: "https://rsshub.app/twitter/user/TeamAFP", tier: 2, category: "defense" },
+  { id: "x-bangkosentral", name: "X: BSP", url: "https://rsshub.app/twitter/user/bangkosentral", tier: 2, category: "economy" },
+  { id: "x-senateph", name: "X: Senate PH", url: "https://rsshub.app/twitter/user/senatePH", tier: 2, category: "national-politics" },
+  { id: "x-comelec", name: "X: COMELEC", url: "https://rsshub.app/twitter/user/coabordo", tier: 2, category: "national-politics" },
+  { id: "x-ndrrmc", name: "X: NDRRMC", url: "https://rsshub.app/twitter/user/ABORDO_NDRRMC", tier: 2, category: "disaster" },
+  { id: "x-pagasa", name: "X: PAGASA", url: "https://rsshub.app/twitter/user/dabordo_PAGASA", tier: 2, category: "disaster" },
+  { id: "x-phivolcs", name: "X: PHIVOLCS", url: "https://rsshub.app/twitter/user/phabordo_DOST", tier: 2, category: "disaster" },
 
   // ── Philippine Trending / Social Media ──
   { id: "gnews-trending-ph", name: "PH Trending", url: "https://news.google.com/rss/search?q=Philippines+trending+viral&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
