@@ -41,6 +41,31 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "sunstar", name: "SunStar", url: "https://www.sunstar.com.ph/rssFeed/0", tier: 3, category: "regional" },
   { id: "manilatimes", name: "The Manila Times", url: "https://www.manilatimes.net/feed/", tier: 3, category: "national-politics" },
 
+  // Tier 2 — Additional National with confirmed RSS
+  { id: "manilastandard", name: "Manila Standard", url: "https://manilastandard.net/rss-feed", tier: 2, category: "national-politics" },
+  { id: "philstar-headlines", name: "PhilStar Headlines", url: "https://www.philstar.com/rss/headlines", tier: 2, category: "national-politics" },
+  { id: "inquirer-full", name: "Inquirer Full Feed", url: "https://inquirer.net/fullfeed", tier: 2, category: "national-politics" },
+  { id: "gma-regions", name: "GMA Regions", url: "https://data.gmanetwork.com/gno/rss/news/regions/feed.xml", tier: 2, category: "regional" },
+
+  // Tier 3 — Regional: Underserved areas
+  { id: "sunstar-dumaguete", name: "SunStar Dumaguete", url: "https://www.sunstar.com.ph/dumaguete/rss", tier: 3, category: "regional", regionId: "dumaguete", location: { lat: 9.3068, lon: 123.3054 } },
+  { id: "sunstar-pangasinan", name: "SunStar Pangasinan", url: "https://www.sunstar.com.ph/pangasinan/rss", tier: 3, category: "regional", regionId: "pangasinan", location: { lat: 16.0433, lon: 120.3333 } },
+
+  // Tier 4 — Google News Geo for underserved cities
+  { id: "gnews-geo-batangas", name: "Local: Batangas", url: "https://news.google.com/rss/headlines/section/geo/Batangas?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "batangas", location: { lat: 13.7565, lon: 121.0583 } },
+  { id: "gnews-geo-laguna", name: "Local: Laguna", url: "https://news.google.com/rss/headlines/section/geo/Laguna+Philippines?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "laguna", location: { lat: 14.2691, lon: 121.4113 } },
+  { id: "gnews-geo-cavite", name: "Local: Cavite", url: "https://news.google.com/rss/headlines/section/geo/Cavite?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "cavite", location: { lat: 14.4791, lon: 120.8970 } },
+  { id: "gnews-geo-tuguegarao", name: "Local: Tuguegarao", url: "https://news.google.com/rss/headlines/section/geo/Tuguegarao?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "tuguegarao", location: { lat: 17.6132, lon: 121.7270 } },
+  { id: "gnews-geo-nuevaecija", name: "Local: Nueva Ecija", url: "https://news.google.com/rss/headlines/section/geo/Nueva+Ecija?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "nuevaecija", location: { lat: 15.5784, lon: 121.1113 } },
+  { id: "gnews-geo-dumaguete", name: "Local: Dumaguete", url: "https://news.google.com/rss/headlines/section/geo/Dumaguete?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "dumaguete", location: { lat: 9.3068, lon: 123.3054 } },
+  { id: "gnews-geo-surigao", name: "Local: Surigao", url: "https://news.google.com/rss/headlines/section/geo/Surigao?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "surigao", location: { lat: 9.7844, lon: 125.4888 } },
+  { id: "gnews-geo-marawi", name: "Local: Marawi", url: "https://news.google.com/rss/headlines/section/geo/Marawi?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "cotabato", location: { lat: 7.9986, lon: 124.2928 } },
+  { id: "gnews-geo-dipolog", name: "Local: Dipolog", url: "https://news.google.com/rss/headlines/section/geo/Dipolog?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "zamboanga", location: { lat: 8.5882, lon: 123.3411 } },
+  { id: "gnews-geo-dagupan", name: "Local: Dagupan", url: "https://news.google.com/rss/headlines/section/geo/Dagupan?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "pangasinan", location: { lat: 16.0433, lon: 120.3333 } },
+  { id: "gnews-geo-lipa", name: "Local: Lipa", url: "https://news.google.com/rss/headlines/section/geo/Lipa+Batangas?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "batangas", location: { lat: 13.9412, lon: 121.1634 } },
+  { id: "gnews-geo-naga", name: "Local: Naga City", url: "https://news.google.com/rss/headlines/section/geo/Naga+City?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "legazpi", location: { lat: 13.6192, lon: 123.1814 } },
+  { id: "gnews-geo-koronadal", name: "Local: Koronadal", url: "https://news.google.com/rss/headlines/section/geo/Koronadal?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "gensan", location: { lat: 6.5025, lon: 124.8467 } },
+
   // Tier 3 — Social Media & Community (Reddit, YouTube)
   { id: "reddit-ph", name: "Reddit r/Philippines", url: "https://www.reddit.com/r/Philippines/.rss", tier: 3, category: "national-politics" },
   { id: "reddit-ph-news", name: "Reddit r/PHNews", url: "https://www.reddit.com/r/phnews/.rss", tier: 3, category: "national-politics" },

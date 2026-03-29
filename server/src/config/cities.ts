@@ -22,4 +22,12 @@ export const PH_CITIES: CityConfig[] = [
   { id: "cotabato", name: "Cotabato", lat: 7.2236, lon: 124.2464, keywords: ["cotabato", "barmm", "bangsamoro", "marawi", "lanao", "maguindanao", "shariff kabunsuan"] },
   { id: "gensan", name: "General Santos", lat: 6.1164, lon: 125.1716, keywords: ["general santos", "gensan", "sarangani", "south cotabato", "sultan kudarat", "koronadal"] },
   { id: "butuan", name: "Butuan", lat: 8.9475, lon: 125.5406, keywords: ["butuan", "agusan", "surigao", "caraga", "bislig", "tandag"] },
+  // Underserved regions
+  { id: "batangas", name: "Batangas", lat: 13.7565, lon: 121.0583, keywords: ["batangas", "lipa", "batangas city", "tanauan", "nasugbu", "san jose batangas"] },
+  { id: "laguna", name: "Laguna", lat: 14.2691, lon: 121.4113, keywords: ["laguna", "santa rosa", "calamba", "san pablo", "biñan", "cabuyao", "los baños"] },
+  { id: "cavite", name: "Cavite", lat: 14.4791, lon: 120.897, keywords: ["cavite", "imus", "bacoor", "dasmariñas", "general trias", "tagaytay", "cavite city"] },
+  { id: "tuguegarao", name: "Tuguegarao", lat: 17.6132, lon: 121.727, keywords: ["tuguegarao", "cagayan valley", "isabela", "nueva vizcaya", "quirino", "batanes", "aparri", "ilagan"] },
+  { id: "nuevaecija", name: "Nueva Ecija", lat: 15.5784, lon: 121.1113, keywords: ["nueva ecija", "cabanatuan", "gapan", "palayan", "san jose nueva ecija", "central luzon"] },
+  { id: "dumaguete", name: "Dumaguete", lat: 9.3068, lon: 123.3054, keywords: ["dumaguete", "negros oriental", "siquijor", "bais", "bayawan", "tanjay"] },
+  { id: "surigao", name: "Surigao", lat: 9.7844, lon: 125.4888, keywords: ["surigao", "surigao del norte", "surigao del sur", "dinagat islands", "siargao"] },
 ];
