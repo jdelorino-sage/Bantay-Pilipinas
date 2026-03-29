@@ -7,20 +7,22 @@ export interface LayerDefinition {
 }
 
 const LAYERS: LayerDefinition[] = [
+  // Core intelligence layers (ON by default)
+  { id: "news-signals", name: "NEWS SIGNALS", color: "#4fc3f7", icon: "\u{1F4F0}", defaultOn: true },
   { id: "wps-features", name: "WPS FEATURES", color: "#ffa726", icon: "\u{1F7E0}", defaultOn: true },
-  { id: "intel-hotspots", name: "INTEL HOTSPOTS", color: "#ef5350", icon: "\u26A0", defaultOn: true },
-  { id: "conflict-zones", name: "CONFLICT ZONES", color: "#ef5350", icon: "\u2716", defaultOn: true },
   { id: "edca-sites", name: "MILITARY BASES", color: "#4fc3f7", icon: "\u25B2", defaultOn: true },
   { id: "volcanoes", name: "ACTIVE VOLCANOES", color: "#ef5350", icon: "\u{1F30B}", defaultOn: true },
+  { id: "weather-data", name: "WEATHER DATA", color: "#66bb6a", icon: "\u{1F321}", defaultOn: true },
+  { id: "military-activity", name: "MILITARY ACTIVITY", color: "#ef5350", icon: "\u2708", defaultOn: true },
+  // Optional layers (OFF by default - user opt-in)
+  { id: "intel-hotspots", name: "INTEL HOTSPOTS", color: "#ef5350", icon: "\u26A0", defaultOn: false },
+  { id: "conflict-zones", name: "CONFLICT ZONES", color: "#ef5350", icon: "\u2716", defaultOn: false },
   { id: "fault-lines", name: "FAULT LINES", color: "#ffa726", icon: "\u2014", defaultOn: false },
   { id: "submarine-cables", name: "UNDERSEA CABLES", color: "#4fc3f7", icon: "\u2014", defaultOn: false },
   { id: "major-ports", name: "MAJOR PORTS", color: "#4fc3f7", icon: "\u25A0", defaultOn: false },
   { id: "weather-systems", name: "WEATHER SYSTEMS", color: "#ffa726", icon: "\u26C5", defaultOn: false },
-  { id: "military-activity", name: "MILITARY ACTIVITY", color: "#ef5350", icon: "\u2708", defaultOn: true },
   { id: "ship-traffic", name: "SHIP TRAFFIC", color: "#66bb6a", icon: "\u{1F6A2}", defaultOn: false },
   { id: "typhoon-tracks", name: "TYPHOON TRACKS", color: "#ffa726", icon: "\u{1F300}", defaultOn: false },
-  { id: "news-signals", name: "NEWS SIGNALS", color: "#4fc3f7", icon: "\u{1F4F0}", defaultOn: true },
-  { id: "weather-data", name: "WEATHER DATA", color: "#66bb6a", icon: "\u{1F321}", defaultOn: true },
   { id: "oil-depots", name: "OIL DEPOTS", color: "#ff7043", icon: "\u{1F6E2}", defaultOn: false },
   { id: "eez-boundary", name: "PH EEZ BOUNDARY", color: "#4fc3f7", icon: "\u{1F30A}", defaultOn: false },
   { id: "shipping-lanes", name: "SHIPPING LANES", color: "#66bb6a", icon: "\u{26F5}", defaultOn: false },

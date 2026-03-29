@@ -67,9 +67,10 @@ describe("PH_FEEDS configuration", () => {
     expect(tier1.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("has more Tier 2 feeds than Tier 1", () => {
+  it("has significant feeds in both Tier 1 and Tier 2", () => {
     const tier1 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 1);
     const tier2 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 2);
-    expect(tier2.length).toBeGreaterThan(tier1.length);
+    expect(tier1.length).toBeGreaterThanOrEqual(5);
+    expect(tier2.length).toBeGreaterThanOrEqual(5);
   });
 });

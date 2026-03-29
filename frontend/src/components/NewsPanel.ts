@@ -1,6 +1,7 @@
 import type { ApiClient } from "../services/api-client";
 import type { NewsArticle } from "@bantay-pilipinas/shared";
 import { escapeHtml, sanitizeUrl } from "../utils/sanitize";
+import { getUrgency } from "./DashboardSummary";
 
 const REGION_FILTERS = [
   { id: "", label: "All" },
@@ -91,10 +92,12 @@ export class NewsPanel {
         .slice(0, 25)
         .map(
           (a: NewsArticle) => {
+            const urgency = getUrgency(a.title);
+            const urgencyClass = urgency === "high" ? " news-urgent-high" : urgency === "medium" ? " news-urgent-med" : "";
             const regionTag = a.regionId
               ? `<span class="news-region">${escapeHtml(a.regionId.toUpperCase())}</span>`
               : "";
-            return `<div class="news-item">
+            return `<div class="news-item${urgencyClass}">
               <a href="${sanitizeUrl(a.url)}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>
               <span class="news-source">${escapeHtml(a.source)}${regionTag}</span>
             </div>`;

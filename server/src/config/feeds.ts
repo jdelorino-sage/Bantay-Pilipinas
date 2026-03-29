@@ -100,54 +100,60 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "gnews-barmm-peace", name: "Google News BARMM", url: "https://news.google.com/rss/search?q=BARMM+Bangsamoro+peace+Mindanao&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "defense" },
   { id: "gnews-afp-ops", name: "Google News AFP Operations", url: "https://news.google.com/rss/search?q=AFP+operations+military+Philippines+encounter&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "defense" },
 
-  // ── Agent: Geopolitical Expert ──
-  { id: "gnews-wps-china", name: "WPS China Tensions", url: "https://news.google.com/rss/search?q=China+Philippines+South+China+Sea+coast+guard&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "wps-maritime" },
-  { id: "gnews-edca-us", name: "EDCA US Alliance", url: "https://news.google.com/rss/search?q=EDCA+Philippines+US+military+alliance+base&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "defense" },
-  { id: "gnews-asean", name: "ASEAN Philippines", url: "https://news.google.com/rss/search?q=ASEAN+Philippines+summit+diplomacy&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
-  { id: "gnews-dfa", name: "DFA Foreign Affairs", url: "https://news.google.com/rss/search?q=DFA+Philippines+foreign+affairs+diplomatic+protest&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
-
-  // ── Agent: Economist ──
-  { id: "gnews-bsp-rate", name: "BSP Monetary Policy", url: "https://news.google.com/rss/search?q=BSP+interest+rate+monetary+policy+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-ofw-remit", name: "OFW Remittances", url: "https://news.google.com/rss/search?q=OFW+remittance+Philippines+overseas+workers&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "ofw-diaspora" },
-  { id: "gnews-bpo", name: "BPO Employment", url: "https://news.google.com/rss/search?q=BPO+Philippines+outsourcing+employment+IT&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  // ── Signal Agents: Key topic feeds (consolidated, no duplicates) ──
+  { id: "gnews-wps-china", name: "WPS China", url: "https://news.google.com/rss/search?q=China+Philippines+South+China+Sea+coast+guard&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "wps-maritime" },
+  { id: "gnews-edca-us", name: "EDCA US Alliance", url: "https://news.google.com/rss/search?q=EDCA+Philippines+US+military+alliance&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "defense" },
   { id: "gnews-inflation", name: "PH Inflation", url: "https://news.google.com/rss/search?q=Philippines+inflation+consumer+prices+PSA&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-gdp", name: "PH GDP Growth", url: "https://news.google.com/rss/search?q=Philippines+GDP+economic+growth+NEDA&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-peso", name: "Peso Exchange", url: "https://news.google.com/rss/search?q=Philippine+peso+dollar+exchange+rate+weakens&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-
-  // ── Agent: LGU Monitor ──
-  { id: "gnews-lgu", name: "LGU Alerts", url: "https://news.google.com/rss/search?q=Philippines+city+government+emergency+ordinance+LGU&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional" },
+  { id: "gnews-ofw-remit", name: "OFW Remittances", url: "https://news.google.com/rss/search?q=OFW+remittance+Philippines+overseas+workers&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "ofw-diaspora" },
   { id: "gnews-mmda", name: "MMDA Traffic", url: "https://news.google.com/rss/search?q=MMDA+traffic+Metro+Manila+flood+advisory&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "manila", location: { lat: 14.5995, lon: 120.9842 } },
-  { id: "gnews-cdrrmc", name: "Disaster Risk", url: "https://news.google.com/rss/search?q=CDRRMC+NDRRMC+disaster+risk+reduction+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
-
-  // ── Agent: Police/Crime ──
-  { id: "gnews-pnp", name: "PNP Crime", url: "https://news.google.com/rss/search?q=PNP+Philippine+National+Police+crime+arrest+operation&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
-  { id: "gnews-drugs", name: "Drug Operations", url: "https://news.google.com/rss/search?q=Philippines+drug+operation+PDEA+shabu+arrest&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
+  { id: "gnews-pnp", name: "PNP Crime", url: "https://news.google.com/rss/search?q=PNP+Philippines+crime+arrest+drug+operation&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
   { id: "gnews-crime", name: "Crime Reports", url: "https://news.google.com/rss/search?q=Philippines+crime+murder+robbery+shooting+kidnap&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
-  { id: "gnews-cybercrime", name: "Cybercrime", url: "https://news.google.com/rss/search?q=Philippines+cybercrime+scam+fraud+online&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
-
-  // ── Agent: Weather/Disaster ──
   { id: "gnews-flood", name: "Flood Warnings", url: "https://news.google.com/rss/search?q=Philippines+flood+warning+NDRRMC+evacuation&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
-  { id: "gnews-landslide", name: "Landslide Alert", url: "https://news.google.com/rss/search?q=Philippines+landslide+alert+mudslide&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
   { id: "gnews-fire", name: "Fire Incidents", url: "https://news.google.com/rss/search?q=Philippines+fire+BFP+incident+blaze&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
+  { id: "gnews-power", name: "Power Outage", url: "https://news.google.com/rss/search?q=Philippines+power+outage+brownout+Meralco&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  { id: "gnews-rice", name: "Rice/Food Prices", url: "https://news.google.com/rss/search?q=Philippines+rice+food+price+increase+vegetable&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  { id: "gnews-transport", name: "Transport Fares", url: "https://news.google.com/rss/search?q=Philippines+fare+increase+jeepney+MRT+LTFRB&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  { id: "gnews-dengue", name: "Dengue/Health", url: "https://news.google.com/rss/search?q=Philippines+dengue+DOH+outbreak+health+alert&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
+  { id: "gnews-congress", name: "Congress Bills", url: "https://news.google.com/rss/search?q=Philippines+Congress+Senate+bill+passed+law&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
 
-  // ── Agent: Oil/Energy ──
-  { id: "gnews-power", name: "Power Outage", url: "https://news.google.com/rss/search?q=Philippines+power+outage+brownout+Meralco+NGCP&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-lpg", name: "LPG Prices", url: "https://news.google.com/rss/search?q=Philippines+LPG+price+cooking+gas+Petron+Shell&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  // ── Official Gazette & Executive Branch ──
+  { id: "gazette", name: "Official Gazette", url: "https://www.officialgazette.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "gnews-gazette", name: "Official Gazette News", url: "https://news.google.com/rss/search?q=site%3Aofficialgazette.gov.ph+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-malacanang", name: "Malacañang", url: "https://news.google.com/rss/search?q=Malaca%C3%B1ang+Palace+Philippines+President+Marcos&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
 
-  // ── Agent: Commodities/Basic Needs ──
-  { id: "gnews-rice", name: "Rice Prices", url: "https://news.google.com/rss/search?q=Philippines+rice+price+NFA+palay+farmer&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-food", name: "Food Prices", url: "https://news.google.com/rss/search?q=Philippines+food+price+vegetable+meat+fish+increase&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-water", name: "Water Supply", url: "https://news.google.com/rss/search?q=Philippines+water+supply+shortage+Manila+Water+Maynilad&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
-  { id: "gnews-transport", name: "Transport Fares", url: "https://news.google.com/rss/search?q=Philippines+fare+increase+jeepney+bus+MRT+LRT+LTFRB&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
+  // ── Philippine Government Agencies (RSS where available, Google News fallback) ──
+  { id: "dfa-feed", name: "DFA", url: "https://www.dfa.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "deped-feed", name: "DepEd", url: "https://www.deped.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "dole-feed", name: "DOLE", url: "https://www.dole.gov.ph/feed/", tier: 1, category: "economy" },
+  { id: "da-feed", name: "DA (Agriculture)", url: "https://www.da.gov.ph/feed/", tier: 1, category: "economy" },
+  { id: "denr-feed", name: "DENR", url: "https://www.denr.gov.ph/feed/", tier: 1, category: "environment" },
+  { id: "dti-feed", name: "DTI", url: "https://www.dti.gov.ph/feed/", tier: 1, category: "economy" },
+  { id: "dict-feed", name: "DICT", url: "https://www.dict.gov.ph/feed/", tier: 1, category: "technology" },
+  { id: "dpwh-feed", name: "DPWH", url: "https://www.dpwh.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "dilg-feed", name: "DILG", url: "https://www.dilg.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "sc-feed", name: "Supreme Court", url: "https://sc.judiciary.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "senate-feed", name: "Senate Press", url: "https://legacy.senate.gov.ph/rss/rss_news.aspx", tier: 1, category: "national-politics" },
 
-  // ── Agent: Health ──
-  { id: "gnews-dengue", name: "Dengue Outbreak", url: "https://news.google.com/rss/search?q=Philippines+dengue+DOH+outbreak+cases&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
-  { id: "gnews-health", name: "Health Alerts", url: "https://news.google.com/rss/search?q=Philippines+DOH+health+alert+disease+hospital&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
+  // ── Bureau of Fire Protection & Emergency Services ──
+  { id: "gnews-bfp", name: "BFP Fire Reports", url: "https://news.google.com/rss/search?q=BFP+%22Bureau+of+Fire+Protection%22+Philippines+fire+incident&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
+  { id: "gnews-bfp-arson", name: "BFP Arson/Fire", url: "https://news.google.com/rss/search?q=Philippines+fire+arson+blaze+burned+BFP&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
 
-  // ── Agent: Social Services ──
-  { id: "gnews-employment", name: "Employment", url: "https://news.google.com/rss/search?q=Philippines+jobs+employment+DOLE+hiring+unemployment&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-sss", name: "SSS PhilHealth", url: "https://news.google.com/rss/search?q=Philippines+SSS+GSIS+PhilHealth+pension+contribution&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
-  { id: "gnews-education", name: "Education", url: "https://news.google.com/rss/search?q=Philippines+DepEd+school+education+class+suspension&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  // ── X/Twitter Government Accounts (via RSSHub proxy) ──
+  { id: "x-pnagovph", name: "X: PNA Gov PH", url: "https://rsshub.app/twitter/user/pnagovph", tier: 2, category: "national-politics" },
+  { id: "x-govph", name: "X: Official Gazette", url: "https://rsshub.app/twitter/user/govph", tier: 2, category: "national-politics" },
+  { id: "x-dfaphl", name: "X: DFA Philippines", url: "https://rsshub.app/twitter/user/DFAPHL", tier: 2, category: "national-politics" },
+  { id: "x-dilg", name: "X: DILG", url: "https://rsshub.app/twitter/user/DILGPhilippines", tier: 2, category: "national-politics" },
+  { id: "x-teamafp", name: "X: Armed Forces PH", url: "https://rsshub.app/twitter/user/TeamAFP", tier: 2, category: "defense" },
+  { id: "x-bangkosentral", name: "X: BSP", url: "https://rsshub.app/twitter/user/bangkosentral", tier: 2, category: "economy" },
+  { id: "x-senateph", name: "X: Senate PH", url: "https://rsshub.app/twitter/user/senatePH", tier: 2, category: "national-politics" },
+  { id: "x-comelec", name: "X: COMELEC", url: "https://rsshub.app/twitter/user/coabordo", tier: 2, category: "national-politics" },
+  { id: "x-ndrrmc", name: "X: NDRRMC", url: "https://rsshub.app/twitter/user/ABORDO_NDRRMC", tier: 2, category: "disaster" },
+  { id: "x-pagasa", name: "X: PAGASA", url: "https://rsshub.app/twitter/user/dabordo_PAGASA", tier: 2, category: "disaster" },
+  { id: "x-phivolcs", name: "X: PHIVOLCS", url: "https://rsshub.app/twitter/user/phabordo_DOST", tier: 2, category: "disaster" },
+
+  // ── Philippine Trending / Social Media ──
+  { id: "gnews-trending-ph", name: "PH Trending", url: "https://news.google.com/rss/search?q=Philippines+trending+viral&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-ph-twitter", name: "PH Twitter/X", url: "https://news.google.com/rss/search?q=Philippines+Twitter+trending+hashtag&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
 
   // ── Regional: Google News Geo RSS per city ──
   { id: "gnews-geo-manila", name: "Local: Manila", url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "manila", location: { lat: 14.5995, lon: 120.9842 } },
