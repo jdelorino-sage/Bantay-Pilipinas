@@ -84,6 +84,7 @@ export class LiveNewsPanel {
           frameborder="0"
           allow="autoplay; encrypted-media"
           allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
         ></iframe>
         <div class="video-fallback hidden" id="video-fallback">
           <span class="fallback-icon">&#x1F4FA;</span>
