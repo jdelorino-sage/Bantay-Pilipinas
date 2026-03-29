@@ -149,6 +149,38 @@ export const PH_FEEDS: FeedConfig[] = [
   { id: "gnews-sss", name: "SSS PhilHealth", url: "https://news.google.com/rss/search?q=Philippines+SSS+GSIS+PhilHealth+pension+contribution&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "economy" },
   { id: "gnews-education", name: "Education", url: "https://news.google.com/rss/search?q=Philippines+DepEd+school+education+class+suspension&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
 
+  // ── Official Gazette & Executive Branch ──
+  { id: "gazette", name: "Official Gazette", url: "https://www.officialgazette.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "gnews-gazette", name: "Official Gazette News", url: "https://news.google.com/rss/search?q=site%3Aofficialgazette.gov.ph+Philippines&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-malacanang", name: "Malacañang", url: "https://news.google.com/rss/search?q=Malaca%C3%B1ang+Palace+Philippines+President+Marcos&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+
+  // ── Philippine Government Agencies (RSS where available, Google News fallback) ──
+  { id: "dfa-feed", name: "DFA", url: "https://www.dfa.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "deped-feed", name: "DepEd", url: "https://www.deped.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "dole-feed", name: "DOLE", url: "https://www.dole.gov.ph/feed/", tier: 1, category: "economy" },
+  { id: "da-feed", name: "DA (Agriculture)", url: "https://www.da.gov.ph/feed/", tier: 1, category: "economy" },
+  { id: "denr-feed", name: "DENR", url: "https://www.denr.gov.ph/feed/", tier: 1, category: "environment" },
+  { id: "dti-feed", name: "DTI", url: "https://www.dti.gov.ph/feed/", tier: 1, category: "economy" },
+  { id: "dict-feed", name: "DICT", url: "https://www.dict.gov.ph/feed/", tier: 1, category: "technology" },
+  { id: "dpwh-feed", name: "DPWH", url: "https://www.dpwh.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "dilg-feed", name: "DILG", url: "https://www.dilg.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "sc-feed", name: "Supreme Court", url: "https://sc.judiciary.gov.ph/feed/", tier: 1, category: "national-politics" },
+  { id: "senate-feed", name: "Senate Press", url: "https://www.senate.gov.ph/rss/press_release.xml", tier: 1, category: "national-politics" },
+
+  // ── Bureau of Fire Protection & Emergency Services ──
+  { id: "gnews-bfp", name: "BFP Fire Reports", url: "https://news.google.com/rss/search?q=BFP+%22Bureau+of+Fire+Protection%22+Philippines+fire+incident&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "disaster" },
+  { id: "gnews-bfp-arson", name: "BFP Arson/Fire", url: "https://news.google.com/rss/search?q=Philippines+fire+arson+blaze+burned+BFP&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "crime" },
+
+  // ── X/Twitter Philippine Government (via Google News) ──
+  { id: "gnews-ph-govt-x", name: "PH Govt Social", url: "https://news.google.com/rss/search?q=Philippines+government+announcement+executive+order+proclamation&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-marcos-admin", name: "Marcos Admin", url: "https://news.google.com/rss/search?q=Marcos+Philippines+president+signed+approved&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-congress", name: "Congress Bills", url: "https://news.google.com/rss/search?q=Philippines+Congress+Senate+bill+passed+approved+law&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-comelec", name: "COMELEC Elections", url: "https://news.google.com/rss/search?q=COMELEC+Philippines+election+candidates+voting&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+
+  // ── Philippine Trending / Social Media ──
+  { id: "gnews-trending-ph", name: "PH Trending", url: "https://news.google.com/rss/search?q=Philippines+trending+viral&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+  { id: "gnews-ph-twitter", name: "PH Twitter/X", url: "https://news.google.com/rss/search?q=Philippines+Twitter+trending+hashtag&hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "national-politics" },
+
   // ── Regional: Google News Geo RSS per city ──
   { id: "gnews-geo-manila", name: "Local: Manila", url: "https://news.google.com/rss/headlines/section/geo/Manila?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "manila", location: { lat: 14.5995, lon: 120.9842 } },
   { id: "gnews-geo-cebu", name: "Local: Cebu", url: "https://news.google.com/rss/headlines/section/geo/Cebu?hl=en-PH&gl=PH&ceid=PH:en", tier: 4, category: "regional", regionId: "cebu", location: { lat: 10.3157, lon: 123.8854 } },

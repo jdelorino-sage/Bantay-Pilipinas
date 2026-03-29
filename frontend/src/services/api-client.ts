@@ -130,6 +130,11 @@ const DIRECT_FEEDS: DirectFeedConfig[] = [
   { url: "https://news.google.com/rss/headlines/section/geo/Cavite?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Cavite", category: "regional", tier: 4, regionId: "cavite", lat: 14.4791, lon: 120.897 },
   { url: "https://news.google.com/rss/headlines/section/geo/Tuguegarao?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Tuguegarao", category: "regional", tier: 4, regionId: "tuguegarao", lat: 17.6132, lon: 121.727 },
   { url: "https://news.google.com/rss/headlines/section/geo/Dumaguete?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Dumaguete", category: "regional", tier: 4, regionId: "dumaguete", lat: 9.3068, lon: 123.3054 },
+  // Government & Official
+  { url: "https://www.officialgazette.gov.ph/feed/", name: "Official Gazette", category: "national-politics", tier: 1 },
+  { url: "https://news.google.com/rss/search?q=BFP+Philippines+fire+incident+blaze&hl=en-PH&gl=PH&ceid=PH:en", name: "BFP Fire Reports", category: "disaster", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=Philippines+government+executive+order+proclamation&hl=en-PH&gl=PH&ceid=PH:en", name: "PH Govt Orders", category: "national-politics", tier: 4 },
+  { url: "https://news.google.com/rss/search?q=Philippines+trending+viral&hl=en-PH&gl=PH&ceid=PH:en", name: "PH Trending", category: "national-politics", tier: 4 },
 ];
 
 let directNewsCache: { articles: NewsArticle[]; fetchedAt: number } | null = null;
