@@ -124,6 +124,12 @@ const DIRECT_FEEDS: DirectFeedConfig[] = [
   { url: "https://news.google.com/rss/search?q=Philippines+dengue+DOH+outbreak&hl=en-PH&gl=PH&ceid=PH:en", name: "Dengue/Health", category: "disaster", tier: 4 },
   { url: "https://news.google.com/rss/search?q=Philippines+power+outage+brownout+Meralco&hl=en-PH&gl=PH&ceid=PH:en", name: "Power Outage", category: "economy", tier: 4 },
   { url: "https://news.google.com/rss/search?q=China+Philippines+South+China+Sea+coast+guard&hl=en-PH&gl=PH&ceid=PH:en", name: "WPS China", category: "wps-maritime", tier: 4 },
+  // Underserved regions
+  { url: "https://news.google.com/rss/headlines/section/geo/Batangas?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Batangas", category: "regional", tier: 4, regionId: "batangas", lat: 13.7565, lon: 121.0583 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Laguna+Philippines?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Laguna", category: "regional", tier: 4, regionId: "laguna", lat: 14.2691, lon: 121.4113 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Cavite?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Cavite", category: "regional", tier: 4, regionId: "cavite", lat: 14.4791, lon: 120.897 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Tuguegarao?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Tuguegarao", category: "regional", tier: 4, regionId: "tuguegarao", lat: 17.6132, lon: 121.727 },
+  { url: "https://news.google.com/rss/headlines/section/geo/Dumaguete?hl=en-PH&gl=PH&ceid=PH:en", name: "Local: Dumaguete", category: "regional", tier: 4, regionId: "dumaguete", lat: 9.3068, lon: 123.3054 },
 ];
 
 let directNewsCache: { articles: NewsArticle[]; fetchedAt: number } | null = null;
