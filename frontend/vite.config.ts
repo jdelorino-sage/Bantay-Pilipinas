@@ -31,7 +31,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           "map-deckgl": ["@deck.gl/core", "@deck.gl/layers", "@deck.gl/geo-layers"],
-          "map-globe": ["globe.gl", "three"],
           d3: ["d3"],
         },
       },

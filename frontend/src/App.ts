@@ -11,13 +11,9 @@ import { DisasterPanel } from "./components/DisasterPanel";
 import { MarketPanel } from "./components/MarketPanel";
 import { MilitaryPanel } from "./components/MilitaryPanel";
 import { StabilityPanel } from "./components/StabilityPanel";
-import { InsightsPanel } from "./components/InsightsPanel";
-import { StrategicPosturePanel } from "./components/StrategicPosturePanel";
 import { RiskOverviewPanel } from "./components/RiskOverviewPanel";
-import { OFWPanel } from "./components/OFWPanel";
-import { InfrastructurePanel } from "./components/InfrastructurePanel";
+import { DashboardSummary } from "./components/DashboardSummary";
 import { SearchModal } from "./components/SearchModal";
-import { GlobeMap } from "./components/GlobeMap";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { t, toggleLocale } from "./i18n";
 import { withErrorBoundary } from "./utils/error-boundary";
@@ -38,9 +34,7 @@ export class App {
   private ticker: NewsTicker | null = null;
   private searchModal: SearchModal | null = null;
   private settingsPanel: SettingsPanel | null = null;
-  private globeMap: GlobeMap | null = null;
-  private mapContainer: MapContainer | null = null;
-  private is3D = false;
+  // mapContainer is retained by DeckGLMap's own lifecycle
   private consecutiveHealthFailures = 0;
   private lastNewsCount = 0;
   private vesselBuffer: TrackedVessel[] = [];
@@ -95,10 +89,7 @@ export class App {
       <div class="situation-bar">
         <span class="situation-label" id="situation-label">${t("situation")}</span>
         <span class="situation-datetime" id="situation-datetime"></span>
-        <div class="situation-controls">
-          <button class="view-toggle active" id="btn-2d">2D</button>
-          <button class="view-toggle" id="btn-3d">3D</button>
-        </div>
+        <div class="situation-controls"></div>
       </div>
       <div id="ticker-container"></div>
       <main class="app-main">
@@ -130,7 +121,7 @@ export class App {
   private initMap(): void {
     const mapEl = document.getElementById("map-container");
     if (mapEl) {
-      this.mapContainer = new MapContainer(mapEl, this.api);
+      new MapContainer(mapEl, this.api);
     }
 
     const legendContainer = document.getElementById("map-legend-container");
@@ -139,34 +130,6 @@ export class App {
       legendContainer.appendChild(legend.render());
     }
 
-    document.getElementById("btn-2d")?.addEventListener("click", () => this.setMapMode(false));
-    document.getElementById("btn-3d")?.addEventListener("click", () => this.setMapMode(true));
-  }
-
-  private setMapMode(use3D: boolean): void {
-    if (this.is3D === use3D) return;
-    this.is3D = use3D;
-
-    document.getElementById("btn-2d")?.classList.toggle("active", !use3D);
-    document.getElementById("btn-3d")?.classList.toggle("active", use3D);
-
-    const mapEl = document.getElementById("map-container");
-    if (!mapEl) return;
-
-    if (use3D) {
-      this.mapContainer = null;
-      mapEl.innerHTML = "";
-      this.globeMap = new GlobeMap(mapEl);
-      this.globeMap.init();
-    } else {
-      this.globeMap = null;
-      mapEl.innerHTML = "";
-      this.mapContainer = new MapContainer(mapEl, this.api);
-    }
-  }
-
-  getMapContainer(): MapContainer | null {
-    return this.mapContainer;
   }
 
   private initRightPanels(): void {
@@ -174,8 +137,7 @@ export class App {
     if (!rightPanels) return;
 
     const liveNews = withErrorBoundary(new LiveNewsPanel(this.api), "Live News");
-    const insightsPanel = withErrorBoundary(new InsightsPanel(this.api), "AI Insights");
-    const posturePanel = withErrorBoundary(new StrategicPosturePanel(this.api), "Strategic Posture");
+    const dashSummary = withErrorBoundary(new DashboardSummary(this.api), "Dashboard Summary");
     const riskPanel = withErrorBoundary(new RiskOverviewPanel(this.api), "Risk Overview");
     const stabilityPanel = withErrorBoundary(new StabilityPanel(this.api), "Regional Instability");
     const newsPanel = withErrorBoundary(new NewsPanel(this.api), "National News");
@@ -183,37 +145,26 @@ export class App {
     const militaryPanel = withErrorBoundary(new MilitaryPanel(this.api), "Military Tracker");
     const disasterPanel = withErrorBoundary(new DisasterPanel(this.api), "Disaster Monitor");
     const marketPanel = withErrorBoundary(new MarketPanel(this.api), "Market Data");
-    const ofwPanel = withErrorBoundary(new OFWPanel(this.api), "OFW & Diaspora");
-    const infraPanel = withErrorBoundary(new InfrastructurePanel(), "Infrastructure");
 
     rightPanels.appendChild(liveNews.render());
 
     const scrollArea = document.createElement("div");
     scrollArea.className = "right-panels-scroll";
 
-    scrollArea.appendChild(insightsPanel.render());
-
-    const splitRow = document.createElement("div");
-    splitRow.className = "panel-split-row";
-    splitRow.appendChild(posturePanel.render());
-    splitRow.appendChild(riskPanel.render());
-    scrollArea.appendChild(splitRow);
-
+    scrollArea.appendChild(dashSummary.render());
+    scrollArea.appendChild(riskPanel.render());
     scrollArea.appendChild(stabilityPanel.render());
     scrollArea.appendChild(newsPanel.render());
     scrollArea.appendChild(wpsPanel.render());
     scrollArea.appendChild(militaryPanel.render());
     scrollArea.appendChild(disasterPanel.render());
     scrollArea.appendChild(marketPanel.render());
-    scrollArea.appendChild(ofwPanel.render());
-    scrollArea.appendChild(infraPanel.render());
 
     rightPanels.appendChild(scrollArea);
 
     this.panelInstances = [
       liveNews,
-      insightsPanel,
-      posturePanel,
+      dashSummary,
       riskPanel,
       stabilityPanel,
       newsPanel,
@@ -221,8 +172,6 @@ export class App {
       militaryPanel,
       disasterPanel,
       marketPanel,
-      ofwPanel,
-      infraPanel,
     ];
   }
 

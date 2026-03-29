@@ -650,7 +650,8 @@ body {
 .video-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 8;
+  max-height: 160px;
   background: #000;
   overflow: hidden;
 }
@@ -1957,6 +1958,120 @@ body.compact-mode .news-item {
 .fuel-diesel {
   color: var(--accent-blue);
   font-size: 10px;
+}
+
+/* ===== DASHBOARD SUMMARY ===== */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.dash-stat {
+  text-align: center;
+  padding: 6px 4px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.dash-stat.dash-alert {
+  border-color: var(--accent-red);
+  background: rgba(239, 83, 80, 0.08);
+}
+
+.dash-stat-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.dash-alert .dash-stat-value {
+  color: var(--accent-red);
+}
+
+.dash-stat-label {
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dash-risk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.dash-risk-label {
+  color: var(--text-secondary);
+}
+
+.dash-risk-region {
+  font-weight: 700;
+}
+
+.dash-risk-trend {
+  font-size: 10px;
+}
+
+.dash-trending {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.dash-city-tag {
+  padding: 2px 8px;
+  font-size: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-secondary);
+}
+
+.dash-city-tag strong {
+  color: var(--accent-blue);
+  margin-left: 3px;
+}
+
+.dash-alerts {
+  margin-top: 6px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 4px;
+}
+
+.dash-alert-item {
+  font-size: 11px;
+  color: var(--accent-red);
+  padding: 2px 0;
+  border-left: 3px solid var(--accent-red);
+  padding-left: 8px;
+  margin: 3px 0;
+}
+
+/* ===== NEWS URGENCY COLORING ===== */
+
+.news-item.news-urgent-high {
+  border-left: 3px solid var(--accent-red);
+  padding-left: 8px;
+  background: rgba(239, 83, 80, 0.05);
+}
+
+.news-item.news-urgent-high a {
+  color: var(--accent-red);
+}
+
+.news-item.news-urgent-med {
+  border-left: 3px solid var(--accent-yellow);
+  padding-left: 8px;
 }
 
 /* ===== PSE STOCK ITEMS ===== */
