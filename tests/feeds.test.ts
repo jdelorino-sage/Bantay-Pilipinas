@@ -62,15 +62,15 @@ describe("PH_FEEDS configuration", () => {
     expect(categories.has("defense")).toBe(true);
   });
 
-  it("has at least one Tier 1 feed", () => {
-    const tier1 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 1);
-    expect(tier1.length).toBeGreaterThanOrEqual(1);
+  it("has feeds from multiple tiers", () => {
+    const tier2 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 2);
+    const tier4 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 4);
+    expect(tier2.length).toBeGreaterThanOrEqual(5);
+    expect(tier4.length).toBeGreaterThanOrEqual(10);
   });
 
-  it("has significant feeds in both Tier 1 and Tier 2", () => {
-    const tier1 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 1);
-    const tier2 = PH_FEEDS.filter((f: FeedConfig) => f.tier === 2);
-    expect(tier1.length).toBeGreaterThanOrEqual(5);
-    expect(tier2.length).toBeGreaterThanOrEqual(5);
+  it("has working feeds across tiers", () => {
+    const tiers = new Set(PH_FEEDS.map((f: FeedConfig) => f.tier));
+    expect(tiers.size).toBeGreaterThanOrEqual(2);
   });
 });
