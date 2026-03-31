@@ -436,34 +436,36 @@ export class DeckGLMap {
     const emptyGeoJSON: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
     this.map.addSource("military-activity", { type: "geojson", data: emptyGeoJSON });
 
-    // Outer glow ring
+    // Outer radar-style pulse ring (bright yellow-green)
     this.map.addLayer({
       id: "military-activity-glow",
       type: "circle",
       source: "military-activity",
       paint: {
-        "circle-radius": 12,
-        "circle-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
-        "circle-opacity": 0.15,
-        "circle-blur": 1,
+        "circle-radius": 16,
+        "circle-color": ["match", ["get", "classification"],
+          "ph-military", "#00e676", "civilian", "#ffeb3b", "#ff1744"],
+        "circle-opacity": 0.12,
+        "circle-blur": 0.6,
       },
     });
 
-    // Main dot
+    // Inner bright marker (larger, vivid colors)
     this.map.addLayer({
       id: "military-activity-circle",
       type: "circle",
       source: "military-activity",
       paint: {
-        "circle-radius": 5,
-        "circle-color": ["match", ["get", "classification"], "ph-military", "#4fc3f7", "civilian", "#90caf9", "#ef5350"],
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
-        "circle-opacity": 0.95,
+        "circle-radius": 6,
+        "circle-color": ["match", ["get", "classification"],
+          "ph-military", "#00e676", "civilian", "#ffeb3b", "#ff1744"],
+        "circle-stroke-width": 2.5,
+        "circle-stroke-color": "#000",
+        "circle-opacity": 1,
       },
     });
 
-    // Direction indicator arrow
+    // Callsign label with directional arrow
     this.map.addLayer({
       id: "military-activity-label",
       type: "symbol",
@@ -474,9 +476,15 @@ export class DeckGLMap {
         "text-offset": [0, -1.5],
         "text-anchor": "bottom",
         "text-rotate": ["get", "heading"],
+        "text-allow-overlap": true,
       },
-      paint: { "text-color": "#e0e6f0", "text-halo-color": "#000", "text-halo-width": 1.5 },
-      minzoom: 6,
+      paint: {
+        "text-color": ["match", ["get", "classification"],
+          "ph-military", "#00e676", "civilian", "#ffeb3b", "#ff1744"],
+        "text-halo-color": "#000",
+        "text-halo-width": 2,
+      },
+      minzoom: 5,
     });
 
     this.addPopup("military-activity-circle", (props) =>
