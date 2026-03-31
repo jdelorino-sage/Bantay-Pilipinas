@@ -1,6 +1,6 @@
 import type { ApiClient } from "../services/api-client";
 import type { NewsArticle } from "@bantay-pilipinas/shared";
-import { escapeHtml, sanitizeUrl } from "../utils/sanitize";
+import { escapeHtml } from "../utils/sanitize";
 import { getUrgency } from "./DashboardSummary";
 
 const REGION_FILTERS = [
@@ -97,13 +97,22 @@ export class NewsPanel {
             const regionTag = a.regionId
               ? `<span class="news-region">${escapeHtml(a.regionId.toUpperCase())}</span>`
               : "";
-            return `<div class="news-item${urgencyClass}">
-              <a href="${sanitizeUrl(a.url)}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>
+            return `<div class="news-item${urgencyClass} news-clickable" data-url="${escapeHtml(a.url)}" data-title="${escapeHtml(a.title)}" data-source="${escapeHtml(a.source)}" data-region="${a.regionId || ""}">
+              <span class="news-title">${escapeHtml(a.title)}</span>
               <span class="news-source">${escapeHtml(a.source)}${regionTag}</span>
             </div>`;
           }
         )
         .join("");
+
+      // Wire clicks to open article modal
+      body.querySelectorAll<HTMLElement>(".news-clickable").forEach((item) => {
+        item.addEventListener("click", () => {
+          document.dispatchEvent(new CustomEvent("article-open", {
+            detail: { title: item.dataset.title, url: item.dataset.url, source: item.dataset.source, regionId: item.dataset.region || undefined },
+          }));
+        });
+      });
     } catch (err) {
       console.warn("[news] Failed to load:", err);
       const body = el.querySelector(".panel-body");

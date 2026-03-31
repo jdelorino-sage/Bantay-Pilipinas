@@ -906,15 +906,32 @@ export class DeckGLMap {
       minzoom: 7,
     });
 
-    this.addPopup("news-cluster-circle", (props) => {
-      const headlines = props.headlines ? props.headlines.split("|||").slice(0, 5) : [props.title];
-      const headlineHtml = headlines.map((h: string) => `<div style="margin:2px 0;font-size:11px;">&bull; ${h}</div>`).join("");
-      return `<strong>${props.region.toUpperCase()} (${props.count} articles)</strong><br/>${headlineHtml}`;
-    });
+    // Click on cluster → open first article in modal
+    if (this.map) {
+      this.map.on("click", "news-cluster-circle", (e) => {
+        if (!e.features?.[0]) return;
+        const props = e.features[0].properties as Record<string, string>;
+        const headlines = props.headlines ? props.headlines.split("|||") : [];
+        document.dispatchEvent(new CustomEvent("article-open", {
+          detail: { title: headlines[0] || props.title, url: "", source: `${props.region} cluster`, regionId: props.region },
+        }));
+      });
 
-    this.addPopup("news-dot-circle", (props) =>
-      `<strong>${props.title}</strong><br/><em>${props.source}</em><br/>${props.region.toUpperCase()}`
-    );
+      // Click on individual dot → open article in modal
+      this.map.on("click", "news-dot-circle", (e) => {
+        if (!e.features?.[0]) return;
+        const props = e.features[0].properties as Record<string, string>;
+        document.dispatchEvent(new CustomEvent("article-open", {
+          detail: { title: props.title, url: props.url || "", source: props.source, regionId: props.region },
+        }));
+      });
+
+      // Cursor hint on hover
+      for (const layerId of ["news-cluster-circle", "news-dot-circle"]) {
+        this.map.on("mouseenter", layerId, () => { if (this.map) this.map.getCanvas().style.cursor = "pointer"; });
+        this.map.on("mouseleave", layerId, () => { if (this.map) this.map.getCanvas().style.cursor = ""; });
+      }
+    }
 
     this.fetchNewsSignals();
     setInterval(() => this.fetchNewsSignals(), 60_000);
@@ -925,7 +942,7 @@ export class DeckGLMap {
     try {
       const response = this.api
         ? await this.api.getNews()
-        : { data: [] as { title: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null }[] };
+        : { data: [] as { title: string; url?: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null }[] };
 
       const geoArticles = response.data.filter((a) => a.lat != null && a.lon != null);
       console.log(`[news-signals] ${response.data.length} articles, ${geoArticles.length} geo-tagged`);
@@ -955,7 +972,7 @@ export class DeckGLMap {
       const dotFeatures: GeoJSON.Feature[] = geoArticles.slice(0, 80).map((a) => ({
         type: "Feature" as const,
         geometry: { type: "Point" as const, coordinates: [a.lon! + jitter(), a.lat! + jitter()] },
-        properties: { title: a.title, source: a.source, category: a.category, region: a.regionId || "" },
+        properties: { title: a.title, source: a.source, category: a.category, region: a.regionId || "", url: a.url || "" },
       }));
 
       console.log(`[news-signals] Plotting ${clusterFeatures.length} clusters + ${dotFeatures.length} dots`);
