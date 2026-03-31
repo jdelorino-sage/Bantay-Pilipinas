@@ -5,7 +5,7 @@ import { getPool, hasDatabaseUrl } from "./client.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const MIGRATIONS = ["001_initial.sql", "002_weather_advisories.sql", "003_earthquake_unique.sql"];
+const MIGRATIONS = ["001_initial.sql", "002_weather_advisories.sql", "003_earthquake_unique.sql", "004_news_location.sql"];
 
 export async function runMigrations(): Promise<void> {
   if (!hasDatabaseUrl()) {
