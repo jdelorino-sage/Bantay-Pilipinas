@@ -656,6 +656,26 @@ body {
   overflow: hidden;
 }
 
+.video-live-link {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent-red);
+  border-radius: 3px;
+  text-decoration: none;
+  z-index: 2;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
+.video-live-link:hover {
+  opacity: 1;
+}
+
 .video-container iframe {
   width: 100%;
   height: 100%;
