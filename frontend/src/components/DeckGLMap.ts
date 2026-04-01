@@ -944,8 +944,30 @@ export class DeckGLMap {
         ? await this.api.getNews()
         : { data: [] as { title: string; url?: string; lat?: number | null; lon?: number | null; category: string; source: string; regionId?: string; publishedAt: string | null }[] };
 
-      const geoArticles = response.data.filter((a) => a.lat != null && a.lon != null);
-      console.log(`[news-signals] ${response.data.length} articles, ${geoArticles.length} geo-tagged`);
+      // Map regionId to coordinates for articles without explicit lat/lon
+      const regionCoords: Record<string, [number, number]> = {
+        manila: [120.9842, 14.5995], cebu: [123.8854, 10.3157], davao: [125.4553, 7.1907],
+        zamboanga: [122.079, 6.9214], iloilo: [122.5621, 10.7202], cdo: [124.6319, 8.4542],
+        baguio: [120.596, 16.4023], tacloban: [124.96, 11.2543], legazpi: [123.7438, 13.1391],
+        palawan: [118.7384, 9.8349], pampanga: [120.62, 15.0794], pangasinan: [120.3333, 16.0433],
+        cotabato: [124.2464, 7.2236], gensan: [125.1716, 6.1164], butuan: [125.5406, 8.9475],
+        batangas: [121.0583, 13.7565], laguna: [121.4113, 14.2691], cavite: [120.897, 14.4791],
+        tuguegarao: [121.727, 17.6132], nuevaecija: [121.1113, 15.5784], dumaguete: [123.3054, 9.3068],
+        surigao: [125.4888, 9.7844],
+      };
+
+      // Enrich articles: fill in lat/lon from regionId if missing
+      const enriched = response.data.map((a) => {
+        if (a.lat != null && a.lon != null) return a;
+        if (a.regionId && regionCoords[a.regionId]) {
+          const [lon, lat] = regionCoords[a.regionId];
+          return { ...a, lat, lon };
+        }
+        return a;
+      });
+
+      const geoArticles = enriched.filter((a) => a.lat != null && a.lon != null);
+      console.log(`[news-signals] ${response.data.length} articles, ${geoArticles.length} geo-tagged (after enrichment)`);
 
       // Build city clusters
       const clusters = new Map<string, { lat: number; lon: number; count: number; category: string; region: string; headlines: string[] }>();
