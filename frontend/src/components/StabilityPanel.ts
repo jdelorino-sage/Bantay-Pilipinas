@@ -66,7 +66,7 @@ export class StabilityPanel {
             <span class="instability-score level-${top.level}">${top.score.toFixed(0)}</span>
             <span class="instability-trend trend-${top.trend}">${top.trend === "rising" ? "\u2191" : top.trend === "falling" ? "\u2193" : "\u2194"}</span>
           </div>
-          <div class="instability-breakdown">
+          <div class="instability-breakdown" title="Unrest / Security / Information">
             U:${topU} S:${topS} I:${topI}
           </div>
         </div>

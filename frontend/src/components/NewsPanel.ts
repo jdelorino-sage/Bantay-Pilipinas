@@ -18,13 +18,8 @@ const REGION_FILTERS = [
   { id: "pampanga", label: "Pampanga" },
   { id: "cotabato", label: "Cotabato" },
   { id: "batangas", label: "Batangas" },
-  { id: "laguna", label: "Laguna" },
   { id: "cavite", label: "Cavite" },
-  { id: "tuguegarao", label: "Cagayan" },
-  { id: "dumaguete", label: "Dumaguete" },
-  { id: "pangasinan", label: "Pangasinan" },
   { id: "gensan", label: "GenSan" },
-  { id: "butuan", label: "Butuan" },
 ];
 
 export class NewsPanel {

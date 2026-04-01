@@ -3,6 +3,20 @@ interface BoundedPanel {
   refresh(): void;
 }
 
+function setupCollapse(el: HTMLElement, panelName: string): void {
+  const header = el.querySelector(".panel-header");
+  if (!header) return;
+  const storageKey = `panel-collapsed-${panelName}`;
+  if (localStorage.getItem(storageKey) === "1") {
+    el.classList.add("collapsed");
+  }
+  header.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest("button, a, input")) return;
+    el.classList.toggle("collapsed");
+    localStorage.setItem(storageKey, el.classList.contains("collapsed") ? "1" : "0");
+  });
+}
+
 export function withErrorBoundary(panel: BoundedPanel, panelName: string): BoundedPanel {
   let container: HTMLElement | null = null;
   let hasRendered = false;
@@ -12,6 +26,7 @@ export function withErrorBoundary(panel: BoundedPanel, panelName: string): Bound
       try {
         container = panel.render();
         hasRendered = true;
+        setupCollapse(container, panelName);
         return container;
       } catch (err) {
         console.error(`[${panelName}] render failed:`, err);
