@@ -15,6 +15,7 @@ import { RiskOverviewPanel } from "./components/RiskOverviewPanel";
 import { DashboardSummary } from "./components/DashboardSummary";
 import { SearchModal } from "./components/SearchModal";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { ArticleModal } from "./components/ArticleModal";
 import { t, toggleLocale } from "./i18n";
 import { withErrorBoundary } from "./utils/error-boundary";
 import type { TrackedVessel, StabilityLevel } from "@bantay-pilipinas/shared";
@@ -34,6 +35,7 @@ export class App {
   private ticker: NewsTicker | null = null;
   private searchModal: SearchModal | null = null;
   private settingsPanel: SettingsPanel | null = null;
+  private articleModal: ArticleModal | null = null;
   // mapContainer is retained by DeckGLMap's own lifecycle
   private consecutiveHealthFailures = 0;
   private lastNewsCount = 0;
@@ -56,6 +58,7 @@ export class App {
     this.initWebSocket();
     this.initSearchModal();
     this.initSettingsPanel();
+    this.initArticleModal();
     this.startPolling();
   }
 
@@ -260,6 +263,17 @@ export class App {
   private initSettingsPanel(): void {
     this.settingsPanel = new SettingsPanel();
     document.body.appendChild(this.settingsPanel.render());
+  }
+
+  private initArticleModal(): void {
+    this.articleModal = new ArticleModal(this.api);
+    document.body.appendChild(this.articleModal.render());
+
+    // Listen for article-open events from map and panels
+    document.addEventListener("article-open", ((e: CustomEvent) => {
+      const { title, url, source, regionId } = e.detail;
+      this.articleModal?.openArticle(title, url, source, regionId);
+    }) as EventListener);
   }
 
   private startPolling(): void {

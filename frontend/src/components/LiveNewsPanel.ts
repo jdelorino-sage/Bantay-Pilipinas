@@ -1,52 +1,10 @@
 import { escapeHtml } from "../utils/sanitize";
 import type { ApiClient } from "../services/api-client";
-
-interface LiveChannel {
-  id: string;
-  name: string;
-  ytChannel: string;
-  // Direct embed URL that works without API - channel's latest/featured video
-  embedUrl: string;
-  liveUrl: string;
-}
-
-const LIVE_CHANNELS: LiveChannel[] = [
-  {
-    id: "abs-cbn", name: "ABS-CBN", ytChannel: "UCstEtN1GBximQ0ZMy2FE0dA",
-    embedUrl: "https://www.youtube.com/embed?listType=user_uploads&list=ABSCBNNews",
-    liveUrl: "https://www.youtube.com/@ABSCBNNews/live",
-  },
-  {
-    id: "gma", name: "GMA", ytChannel: "UCVPbYEWwYOH5jm6Bvi0XkYg",
-    embedUrl: "https://www.youtube.com/embed?listType=user_uploads&list=gabordo7",
-    liveUrl: "https://www.youtube.com/@gmanetwork/live",
-  },
-  {
-    id: "ptv", name: "PTV", ytChannel: "UCm1oP_sg26QBKAC4UGFjMhA",
-    embedUrl: "https://www.youtube.com/embed?listType=user_uploads&list=PTVPhilippines",
-    liveUrl: "https://www.youtube.com/@PTVPhilippines/live",
-  },
-  {
-    id: "onenews", name: "ONE NEWS", ytChannel: "UCupsMUp_wVBbHFjG2GXrwGw",
-    embedUrl: "https://www.youtube.com/embed?listType=user_uploads&list=oabordo",
-    liveUrl: "https://www.youtube.com/@onenabordo/live",
-  },
-  {
-    id: "untv", name: "UNTV", ytChannel: "UCkMGhq6HKXN8KxGQkHPwCwQ",
-    embedUrl: "https://www.youtube.com/embed?listType=user_uploads&list=UntvRadioLaVerdad",
-    liveUrl: "https://www.youtube.com/@ABORDO37/live",
-  },
-  {
-    id: "rappler", name: "RAPPLER", ytChannel: "UCiNfMdFmMnMHFGNRsaRwISA",
-    embedUrl: "https://www.youtube.com/embed?listType=user_uploads&list=rappabordo",
-    liveUrl: "https://www.youtube.com/@rapabordo/live",
-  },
-];
+import type { AISummary, FocalPoint } from "@bantay-pilipinas/shared";
 
 export class LiveNewsPanel {
   private api: ApiClient;
   private el: HTMLElement | null = null;
-  private activeChannel = LIVE_CHANNELS[0];
   private newsCount = 0;
 
   constructor(api: ApiClient) {
@@ -56,63 +14,93 @@ export class LiveNewsPanel {
   render(): HTMLElement {
     const el = document.createElement("section");
     el.className = "panel live-news-panel";
-    el.innerHTML = this.buildHTML();
-    this.el = el;
-    this.attachEvents(el);
-    this.loadRadar();
-    return el;
-  }
-
-  private buildHTML(): string {
-    const tabs = LIVE_CHANNELS.map(
-      (ch) =>
-        `<button class="channel-tab${ch.id === this.activeChannel.id ? " active" : ""}" data-channel="${ch.id}">${ch.name}</button>`
-    ).join("");
-
-    return `
+    el.innerHTML = `
       <div class="panel-header">
-        <h2 class="panel-title">LIVE NEWS</h2>
+        <h2 class="panel-title">AI INTELLIGENCE BRIEF</h2>
         <span class="panel-badge live" id="news-count-badge">${this.newsCount}</span>
       </div>
-      <div class="channel-tabs">${tabs}</div>
-      <div class="video-container" id="video-container">
-        <iframe
-          id="live-video-iframe"
-          src="${this.activeChannel.embedUrl}&autoplay=1&mute=1"
-          frameborder="0"
-          allow="autoplay; encrypted-media"
-          allowfullscreen
-          referrerpolicy="strict-origin-when-cross-origin"
-        ></iframe>
-        <a href="${this.activeChannel.liveUrl}" target="_blank" rel="noopener" class="video-live-link" title="Watch live on YouTube">LIVE \u25B6</a>
+      <div class="ai-brief-body" id="ai-brief-body">
+        <div class="ai-brief-loading">
+          <span class="brief-dot"></span> Analyzing signals...
+        </div>
       </div>
       <div class="radar-overlay" id="radar-overlay">
         <span class="radar-label">ON OUR RADAR</span>
         <span class="radar-text" id="radar-text">Loading...</span>
       </div>
     `;
+    this.el = el;
+    this.loadBrief();
+    this.loadRadar();
+    return el;
   }
 
-  private attachEvents(el: HTMLElement): void {
-    el.querySelectorAll<HTMLButtonElement>(".channel-tab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const channelId = btn.dataset.channel!;
-        const channel = LIVE_CHANNELS.find((c) => c.id === channelId);
-        if (!channel) return;
+  refresh(): void {
+    this.loadRadar();
+  }
 
-        this.activeChannel = channel;
-        el.querySelectorAll(".channel-tab").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
+  private async loadBrief(): Promise<void> {
+    if (!this.el) return;
+    const body = this.el.querySelector("#ai-brief-body") as HTMLElement;
 
-        const iframe = el.querySelector<HTMLIFrameElement>("#live-video-iframe");
-        if (iframe) {
-          iframe.src = `${channel.embedUrl}&autoplay=1&mute=1`;
-        }
+    try {
+      // Get news articles first
+      const newsRes = await this.api.getNews();
+      const articles = newsRes.data;
+      this.newsCount = articles.length;
 
-        const liveLink = el.querySelector<HTMLAnchorElement>(".video-live-link");
-        if (liveLink) liveLink.href = channel.liveUrl;
-      });
-    });
+      const badge = this.el.querySelector("#news-count-badge");
+      if (badge) badge.textContent = String(this.newsCount);
+
+      if (articles.length === 0) {
+        body.innerHTML = `<div class="ai-brief-content"><p class="panel-placeholder">Waiting for news signals...</p></div>`;
+        return;
+      }
+
+      // Request AI summary from backend
+      const headlineIds = articles.slice(0, 20).map((a) => a.id);
+      const summaryRes = await this.api.getSummary(headlineIds);
+      this.renderBrief(body, summaryRes.data);
+    } catch {
+      body.innerHTML = `
+        <div class="ai-brief-content">
+          <p class="ai-brief-fallback">AI briefing requires backend connection. Set ANTHROPIC_API_KEY in Railway for Claude Sonnet 4.6 powered intelligence summaries.</p>
+        </div>
+      `;
+    }
+  }
+
+  private renderBrief(body: HTMLElement, summary: AISummary): void {
+    const providerLabel = summary.provider === "none" ? "" : `<span class="ai-provider">${escapeHtml(summary.provider.toUpperCase())}</span>`;
+    const timestamp = new Date(summary.createdAt).toLocaleTimeString("en-PH", { timeZone: "Asia/Manila", hour: "2-digit", minute: "2-digit" });
+
+    const paragraphs = summary.summaryText
+      .split("\n\n")
+      .filter((p) => p.trim())
+      .map((p) => `<p class="ai-brief-para">${escapeHtml(p.trim())}</p>`)
+      .join("");
+
+    let focalHtml = "";
+    if (summary.focalPoints.length > 0) {
+      const items = summary.focalPoints
+        .map((fp: FocalPoint) => {
+          const severityClass = `focal-${fp.severity}`;
+          return `<span class="focal-tag ${severityClass}">${escapeHtml(fp.title)}</span>`;
+        })
+        .join("");
+      focalHtml = `<div class="focal-tags">${items}</div>`;
+    }
+
+    body.innerHTML = `
+      <div class="ai-brief-content">
+        <div class="ai-brief-meta">
+          ${providerLabel}
+          <span class="ai-brief-time">${escapeHtml(timestamp)} PHT</span>
+        </div>
+        ${paragraphs}
+        ${focalHtml}
+      </div>
+    `;
   }
 
   private async loadRadar(): Promise<void> {
@@ -132,9 +120,5 @@ export class LiveNewsPanel {
     } catch {
       // silently fail
     }
-  }
-
-  refresh(): void {
-    this.loadRadar();
   }
 }
